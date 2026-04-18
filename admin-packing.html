@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Admin Packing Pengiriman</title>
+<meta name="theme-color" content="#002045">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #002045;
+    --primary-container: #1a365d;
+    --surface: #fbf9f8;
+    --surface-low: #f5f3f3;
+    --surface-card: #ffffff;
+    --on-surface: #1b1c1c;
+    --on-surface-muted: #6b6e6e;
+    --outline-variant: rgba(27,28,28,0.15);
+
+    --status-waiting-bg: #e8e8e8;
+    --status-waiting-text: #4a4a4a;
+    --status-printed-bg: #dbeafe;
+    --status-printed-text: #1e40af;
+    --status-packing-bg: #fce7f3;
+    --status-packing-text: #9d174d;
+    --status-shipped-bg: #dcfce7;
+    --status-shipped-text: #166534;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--surface-low);
+    color: var(--on-surface);
+    min-height: 100vh;
+    font-size: 16px;
+    overscroll-behavior: none;
+  }
+
+  /* ---- STICKY HEADER ---- */
+  .sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(251,249,248,0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--outline-variant);
+    padding: 16px 20px 12px;
+    safe-area-inset-top: env(safe-area-inset-top);
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .header-title {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: -0.02em;
+  }
+
+  .header-subtitle {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--on-surface-muted);
+    letter-spacing: 0.05rem;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .icon-btn {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    border: none;
+    background: var(--primary);
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s, opacity 0.2s;
+    flex-shrink: 0;
+  }
+  .icon-btn:active { transform: scale(0.9); opacity: 0.8; }
+  .icon-btn.settings-btn { background: var(--surface-card); color: var(--primary); border: 1.5px solid var(--outline-variant); }
+  .icon-btn.spinning { animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---- STATS ---- */
+  .stats-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .stats-row::-webkit-scrollbar { display: none; }
+
+  .stat-chip {
+    flex-shrink: 0;
+    background: var(--surface-card);
+    border-radius: 14px;
+    padding: 10px 16px;
+    box-shadow: 0 1px 8px rgba(0,32,69,0.07);
+    min-width: 80px;
+  }
+  .stat-chip .num {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+  }
+  .stat-chip .label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05rem;
+    text-transform: uppercase;
+    color: var(--on-surface-muted);
+    margin-top: 3px;
+  }
+
+  /* ---- FILTERS ---- */
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .filter-row::-webkit-scrollbar { display: none; }
+
+  .filter-select {
+    flex-shrink: 0;
+    border: 1.5px solid var(--outline-variant);
+    border-radius: 20px;
+    background: var(--surface-card);
+    color: var(--on-surface);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 7px 16px;
+    outline: none;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    max-width: 160px;
+  }
+  .filter-select:focus { border-color: var(--primary); }
+
+  /* ---- MAIN ---- */
+  .main-content {
+    padding: 20px 16px 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.07rem;
+    text-transform: uppercase;
+    color: var(--on-surface-muted);
+    padding: 0 4px;
+    margin-top: 4px;
+  }
+
+  /* ---- CARD ---- */
+  .order-card {
+    background: var(--surface-card);
+    border-radius: 20px;
+    padding: 18px 18px 16px;
+    box-shadow: 0 2px 20px rgba(27,28,28,0.06), 0 -4px 16px -4px rgba(27,28,28,0.02);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .order-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 5px;
+  }
+  .order-card.status-waiting::before { background: #9ca3af; }
+  .order-card.status-printed::before { background: #3b82f6; }
+  .order-card.status-packing::before { background: linear-gradient(180deg, #ec4899, #f472b6); }
+  .order-card.status-shipped::before { background: #22c55e; }
+  .order-card.packing-done { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .antrian-num {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .tanggal-info {
+    font-size: 11px;
+    color: var(--on-surface-muted);
+    margin-top: 3px;
+    font-weight: 500;
+  }
+
+  .badges {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .badge {
+    border-radius: 20px;
+    padding: 5px 13px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.03rem;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .badge-ekspedisi { background: #002045; color: white; }
+  .badge-waiting { background: var(--status-waiting-bg); color: var(--status-waiting-text); }
+  .badge-printed { background: var(--status-printed-bg); color: var(--status-printed-text); }
+  .badge-packing { background: var(--status-packing-bg); color: var(--status-packing-text); }
+  .badge-shipped { background: var(--status-shipped-bg); color: var(--status-shipped-text); }
+
+  .customer-name {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--on-surface);
+    margin-bottom: 2px;
+  }
+
+  .recipient-name {
+    font-size: 14px;
+    color: var(--on-surface-muted);
+    margin-bottom: 14px;
+  }
+
+  .recipient-name span { font-weight: 600; color: var(--on-surface); }
+
+  .resi-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    align-items: center;
+  }
+
+  .resi-input {
+    flex: 1;
+    border: none;
+    border-bottom: 2px solid var(--outline-variant);
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--on-surface);
+    padding: 6px 0;
+    outline: none;
+    transition: border-color 0.2s;
+    letter-spacing: 0.02em;
+    min-width: 0;
+  }
+  .resi-input:focus { border-color: var(--primary); }
+  .resi-input::placeholder { font-weight: 400; color: var(--on-surface-muted); font-size: 13px; }
+
+  .resi-save-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-container));
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    letter-spacing: 0.03rem;
+    transition: opacity 0.2s, transform 0.15s;
+    flex-shrink: 0;
+  }
+  .resi-save-btn:active { opacity: 0.8; transform: scale(0.96); }
+
+  .divider {
+    height: 1px;
+    background: var(--outline-variant);
+    margin: 0 -18px 14px;
+  }
+
+  .checkbox-row { display: flex; flex-direction: column; gap: 12px; }
+
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    padding: 2px 0;
+    user-select: none;
+  }
+
+  .big-checkbox {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    border: 2.5px solid var(--outline-variant);
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+  }
+
+  .big-checkbox.checked {
+    background: var(--primary);
+    border-color: var(--primary);
+    transform: scale(1.05);
+  }
+
+  .big-checkbox.checked::after {
+    content: '';
+    width: 8px;
+    height: 13px;
+    border: 3px solid white;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg) translate(-1px, -2px);
+  }
+
+  .checkbox-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--on-surface);
+    flex: 1;
+    line-height: 1.3;
+  }
+
+  .checkbox-label.checked-label {
+    text-decoration: line-through;
+    color: var(--on-surface-muted);
+  }
+
+  .saving-indicator {
+    width: 14px; height: 14px;
+    border: 2px solid var(--outline-variant);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    flex-shrink: 0;
+  }
+
+  /* ---- EMPTY STATE ---- */
+  .empty-state {
+    text-align: center;
+    padding: 60px 32px;
+    color: var(--on-surface-muted);
+  }
+  .empty-state .icon { font-size: 56px; margin-bottom: 16px; display: block; }
+  .empty-state h3 {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--on-surface);
+    margin-bottom: 8px;
+  }
+  .empty-state p { font-size: 15px; line-height: 1.6; }
+
+  /* ---- TOAST ---- */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(120px);
+    background: var(--primary);
+    color: white;
+    border-radius: 16px;
+    padding: 13px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 500;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+    box-shadow: 0 8px 32px rgba(0,32,69,0.35);
+    max-width: calc(100vw - 40px);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.error { background: #dc2626; }
+  .toast.success { background: #16a34a; }
+
+  /* ---- SETTINGS MODAL ---- */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 300;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-backdrop.active { display: flex; }
+
+  .settings-sheet {
+    background: var(--surface-card);
+    border-radius: 24px 24px 0 0;
+    padding: 24px 24px 40px;
+    width: 100%;
+    max-width: 480px;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .sheet-handle {
+    width: 40px; height: 4px;
+    background: var(--outline-variant);
+    border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+
+  .settings-title {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 8px;
+  }
+
+  .settings-desc {
+    font-size: 13px;
+    color: var(--on-surface-muted);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .settings-desc code {
+    background: var(--surface-low);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 11px;
+    font-family: monospace;
+    word-break: break-all;
+  }
+
+  .url-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--outline-variant);
+    border-radius: 14px;
+    font-size: 13px;
+    font-family: monospace;
+    color: var(--on-surface);
+    background: var(--surface-low);
+    outline: none;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  .url-input:focus { border-color: var(--primary); }
+
+  .primary-btn {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-container));
+    color: white;
+    font-family: 'Public Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.02rem;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+  .primary-btn:active { opacity: 0.85; transform: scale(0.98); }
+
+  /* ---- CARD ANIMATIONS ---- */
+  .card-enter {
+    animation: cardIn 0.3s ease;
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-fade-out {
+    animation: cardOut 0.4s ease forwards;
+    pointer-events: none;
+  }
+  @keyframes cardOut {
+    to { opacity: 0; transform: translateX(60px); max-height: 0; margin: 0; padding: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- STICKY HEADER -->
+<div class="sticky-header">
+  <div class="header-top">
+    <div>
+      <div class="header-title">📦 Admin Packing</div>
+      <div class="header-subtitle" id="last-update">Memuat data...</div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn settings-btn" onclick="openSettings()" title="Pengaturan">⚙️</button>
+      <button class="icon-btn" id="refresh-btn" onclick="loadData()" title="Refresh">↻</button>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-chip">
+      <div class="num" id="stat-total">—</div>
+      <div class="label">Antrian</div>
+    </div>
+    <div class="stat-chip">
+      <div class="num" id="stat-belum-packing">—</div>
+      <div class="label">Belum Packing</div>
+    </div>
+    <div class="stat-chip">
+      <div class="num" id="stat-siap-kurir">—</div>
+      <div class="label">Siap Kurir</div>
+    </div>
+    <div class="stat-chip">
+      <div class="num" id="stat-shipped">—</div>
+      <div class="label">Diambil</div>
+    </div>
+  </div>
+
+  <div class="filter-row">
+    <select class="filter-select" id="filter-tanggal" onchange="applyFilters()">
+      <option value="">Semua Tanggal</option>
+    </select>
+    <select class="filter-select" id="filter-ekspedisi" onchange="applyFilters()">
+      <option value="">Semua Ekspedisi</option>
+    </select>
+    <select class="filter-select" id="filter-status" onchange="applyFilters()">
+      <option value="">Semua Status</option>
+      <option value="waiting">Menunggu</option>
+      <option value="printed">Sudah Print</option>
+      <option value="packing">Sedang Packing</option>
+    </select>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content" id="card-list">
+  <div class="empty-state">
+    <span class="icon">⏳</span>
+    <h3>Memuat antrian...</h3>
+    <p>Sedang mengambil data dari Google Sheets</p>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-backdrop" id="modal" onclick="closeSettings(event)">
+  <div class="settings-sheet">
+    <div class="sheet-handle"></div>
+    <div class="settings-title">⚙️ Konfigurasi API</div>
+    <div class="settings-desc">
+      Masukkan URL dari Google Apps Script Web App Anda.<br>
+      Cara deploy: <code>Extensions → Apps Script → Deploy → Web App → Execute as: Me → Access: Anyone</code>
+    </div>
+    <input type="url" class="url-input" id="url-input"
+      placeholder="https://script.google.com/macros/s/.../exec"
+      autocomplete="off" />
+    <button class="primary-btn" onclick="saveSettings()">Simpan & Muat Data</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'admin_packing_url_v2';
+let APPS_SCRIPT_URL = localStorage.getItem(STORAGE_KEY) || '';
+let allData = [];
+let savingSet = new Set();
+
+// ==================== DATA LOADING ====================
+
+async function loadData() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  document.getElementById('last-update').textContent = 'Memuat...';
+
+  if (!APPS_SCRIPT_URL) {
+    openSettings();
+    btn.classList.remove('spinning');
+    showEmptyState('🔧', 'Belum terkonfigurasi', 'Tap ⚙️ untuk memasukkan URL Apps Script Anda.');
+    return;
+  }
+
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL + '?action=getAll&t=' + Date.now());
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    if (!Array.isArray(data)) throw new Error('Format data tidak valid');
+
+    allData = data;
+    populateFilters(allData);
+    updateStats(allData);
+    applyFilters();
+
+    const now = new Date();
+    document.getElementById('last-update').textContent =
+      'Update: ' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById('last-update').textContent = 'Gagal memuat';
+    showToast('❌ Gagal koneksi ke Sheets', 'error');
+    showEmptyState('⚠️', 'Gagal memuat data', 'Pastikan URL Apps Script benar dan bisa diakses publik.');
+  }
+
+  btn.classList.remove('spinning');
+}
+
+// ==================== FILTER & RENDER ====================
+
+function getStatus(row) {
+  if (row.diambil) return 'shipped';
+  if (row.packing) return 'packing';
+  if (row.tanggal_print) return 'printed';
+  return 'waiting';
+}
+
+function statusLabel(s) {
+  return { waiting: 'Menunggu', printed: 'Sudah Print', packing: 'Sedang Packing', shipped: 'Dikirim' }[s] || s;
+}
+
+function formatTgl(str) {
+  if (!str) return '';
+  try {
+    const d = new Date(str);
+    if (isNaN(d)) return str;
+    return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+  } catch(e) { return str; }
+}
+
+function applyFilters() {
+  const tgl = document.getElementById('filter-tanggal').value;
+  const eksp = document.getElementById('filter-ekspedisi').value;
+  const st = document.getElementById('filter-status').value;
+
+  const filtered = allData.filter(row => {
+    if (row.diambil) return false;
+    const status = getStatus(row);
+    if (tgl) {
+      const rowTgl = row.tanggal_print ? row.tanggal_print.substring(0, 10) : '';
+      if (rowTgl !== tgl) return false;
+    }
+    if (eksp && row.ekspedisi !== eksp) return false;
+    if (st && status !== st) return false;
+    return true;
+  });
+
+  renderCards(filtered);
+}
+
+function populateFilters(data) {
+  const tglSet = new Set();
+  const ekspSet = new Set();
+
+  data.forEach(r => {
+    if (r.tanggal_print) tglSet.add(r.tanggal_print.substring(0, 10));
+    if (r.ekspedisi) ekspSet.add(r.ekspedisi);
+  });
+
+  const tglEl = document.getElementById('filter-tanggal');
+  const curTgl = tglEl.value;
+  tglEl.innerHTML = '<option value="">Semua Tanggal</option>';
+  [...tglSet].sort().reverse().forEach(t => {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = formatTgl(t);
+    if (t === curTgl) o.selected = true;
+    tglEl.appendChild(o);
+  });
+
+  const ekspEl = document.getElementById('filter-ekspedisi');
+  const curEksp = ekspEl.value;
+  ekspEl.innerHTML = '<option value="">Semua Ekspedisi</option>';
+  [...ekspSet].sort().forEach(e => {
+    const o = document.createElement('option');
+    o.value = e; o.textContent = e;
+    if (e === curEksp) o.selected = true;
+    ekspEl.appendChild(o);
+  });
+}
+
+function updateStats(data) {
+  const active = data.filter(r => !r.diambil);
+  document.getElementById('stat-total').textContent = active.length;
+  document.getElementById('stat-belum-packing').textContent = active.filter(r => !r.packing).length;
+  document.getElementById('stat-siap-kurir').textContent = active.filter(r => r.packing).length;
+  document.getElementById('stat-shipped').textContent = data.filter(r => r.diambil).length;
+}
+
+function sortData(data) {
+  return [...data].sort((a, b) => {
+    const pa = a.tanggal_print ? 1 : 0;
+    const pb = b.tanggal_print ? 1 : 0;
+    if (pb !== pa) return pb - pa;
+    return (a.no_antrian || 0) - (b.no_antrian || 0);
+  });
+}
+
+function renderCards(data) {
+  const container = document.getElementById('card-list');
+
+  if (!data.length) {
+    showEmptyState('✅', 'Semua beres!', 'Tidak ada paket yang perlu diproses saat ini.');
+    return;
+  }
+
+  const sorted = sortData(data);
+  const withPrint = sorted.filter(r => r.tanggal_print);
+  const withoutPrint = sorted.filter(r => !r.tanggal_print);
+
+  container.innerHTML = '';
+
+  if (withPrint.length) {
+    const label = document.createElement('div');
+    label.className = 'section-label';
+    label.textContent = `Sudah Diprint · ${withPrint.length} paket`;
+    container.appendChild(label);
+    withPrint.forEach(r => container.appendChild(buildCard(r)));
+  }
+
+  if (withoutPrint.length) {
+    const label = document.createElement('div');
+    label.className = 'section-label';
+    label.style.marginTop = '8px';
+    label.textContent = `Belum Diprint · ${withoutPrint.length} paket`;
+    container.appendChild(label);
+    withoutPrint.forEach(r => container.appendChild(buildCard(r)));
+  }
+}
+
+function buildCard(row) {
+  const status = getStatus(row);
+  const card = document.createElement('div');
+  card.id = `card-${row.row_id}`;
+  card.dataset.rowId = row.row_id;
+  card.className = `order-card status-${status} card-enter${row.packing ? ' packing-done' : ''}`;
+
+  card.innerHTML = `
+    <div class="card-top">
+      <div>
+        <div class="antrian-num">#${String(row.no_antrian || '?').padStart(3,'0')}</div>
+        ${row.tanggal_antri ? `<div class="tanggal-info">Antri: ${formatTgl(row.tanggal_antri)}</div>` : ''}
+        ${row.tanggal_print ? `<div class="tanggal-info">Print: ${formatTgl(row.tanggal_print)}</div>` : ''}
+      </div>
+      <div class="badges">
+        ${row.ekspedisi ? `<span class="badge badge-ekspedisi">${row.ekspedisi}</span>` : ''}
+        <span class="badge badge-${status}" id="badge-status-${row.row_id}">${statusLabel(status)}</span>
+      </div>
+    </div>
+
+    <div class="customer-name">${row.nama || '—'}</div>
+    <div class="recipient-name">Penerima: <span>${row.nama_penerima || '—'}</span></div>
+
+    ${row.catatan ? `<div style="font-size:12px;color:#9a5a00;background:#fef3c7;border-radius:8px;padding:6px 10px;margin-bottom:12px;">📝 ${row.catatan}</div>` : ''}
+
+    <div class="resi-row">
+      <input type="text" class="resi-input" placeholder="Masukkan Nomor Resi..."
+        value="${row.resi || ''}"
+        id="resi-${row.row_id}"
+        onkeydown="if(event.key==='Enter')saveResi(${row.row_id})"
+        inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false"/>
+      <button class="resi-save-btn" onclick="saveResi(${row.row_id})">Simpan</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="checkbox-row">
+      <div class="checkbox-item" id="packing-row-${row.row_id}" onclick="togglePacking(${row.row_id})">
+        <div class="big-checkbox${row.packing ? ' checked' : ''}" id="chk-packing-${row.row_id}"></div>
+        <span class="checkbox-label${row.packing ? ' checked-label' : ''}" id="lbl-packing-${row.row_id}">Sudah Packing</span>
+      </div>
+      <div class="checkbox-item" id="diambil-row-${row.row_id}" onclick="toggleDiambil(${row.row_id})">
+        <div class="big-checkbox" id="chk-diambil-${row.row_id}"></div>
+        <span class="checkbox-label" id="lbl-diambil-${row.row_id}">Diambil Kurir</span>
+      </div>
+    </div>
+  `;
+
+  return card;
+}
+
+function showEmptyState(icon, title, desc) {
+  document.getElementById('card-list').innerHTML = `
+    <div class="empty-state">
+      <span class="icon">${icon}</span>
+      <h3>${title}</h3>
+      <p>${desc}</p>
+    </div>`;
+}
+
+// ==================== ACTIONS ====================
+
+async function togglePacking(rowId) {
+  if (savingSet.has(`p-${rowId}`)) return;
+  savingSet.add(`p-${rowId}`);
+
+  const row = allData.find(r => r.row_id == rowId);
+  if (!row) { savingSet.delete(`p-${rowId}`); return; }
+
+  const newVal = !row.packing;
+
+  const chk = document.getElementById(`chk-packing-${rowId}`);
+  const lbl = document.getElementById(`lbl-packing-${rowId}`);
+  const card = document.getElementById(`card-${rowId}`);
+  const badge = document.getElementById(`badge-status-${rowId}`);
+
+  chk.classList.toggle('checked', newVal);
+  lbl.classList.toggle('checked-label', newVal);
+
+  if (newVal) {
+    card.classList.add('packing-done', 'status-packing');
+    card.classList.remove('status-waiting', 'status-printed');
+    if (badge) { badge.className = 'badge badge-packing'; badge.textContent = 'Sedang Packing'; }
+  } else {
+    card.classList.remove('packing-done', 'status-packing');
+    card.classList.add(row.tanggal_print ? 'status-printed' : 'status-waiting');
+    if (badge) {
+      const st = row.tanggal_print ? 'printed' : 'waiting';
+      badge.className = `badge badge-${st}`;
+      badge.textContent = statusLabel(st);
+    }
+  }
+
+  try {
+    await apiUpdate(rowId, { packing: newVal });
+    row.packing = newVal;
+    updateStats(allData);
+    showToast(newVal ? '✅ Packing selesai ditandai!' : '↩️ Packing dibatalkan', 'success');
+  } catch(e) {
+    chk.classList.toggle('checked', !newVal);
+    lbl.classList.toggle('checked-label', !newVal);
+    showToast('❌ Gagal menyimpan. Coba lagi.', 'error');
+  }
+
+  savingSet.delete(`p-${rowId}`);
+}
+
+async function toggleDiambil(rowId) {
+  if (savingSet.has(`d-${rowId}`)) return;
+  savingSet.add(`d-${rowId}`);
+
+  const chk = document.getElementById(`chk-diambil-${rowId}`);
+  const card = document.getElementById(`card-${rowId}`);
+  chk.classList.add('checked');
+
+  try {
+    await apiUpdate(rowId, { diambil: true });
+    showToast('🚚 Paket diambil kurir!', 'success');
+    card.classList.add('card-fade-out');
+    setTimeout(() => {
+      allData = allData.filter(r => r.row_id != rowId);
+      updateStats(allData);
+      applyFilters();
+    }, 420);
+  } catch(e) {
+    chk.classList.remove('checked');
+    showToast('❌ Gagal menyimpan. Coba lagi.', 'error');
+  }
+
+  savingSet.delete(`d-${rowId}`);
+}
+
+async function saveResi(rowId) {
+  const input = document.getElementById(`resi-${rowId}`);
+  const resi = input.value.trim();
+  if (!resi) { showToast('⚠️ Masukkan nomor resi terlebih dahulu.', ''); return; }
+
+  const btn = input.nextElementSibling;
+  const origText = btn.textContent;
+  btn.textContent = '...';
+  btn.disabled = true;
+
+  try {
+    await apiUpdate(rowId, { resi });
+    const row = allData.find(r => r.row_id == rowId);
+    if (row) row.resi = resi;
+    showToast('📬 Nomor resi tersimpan!', 'success');
+    input.blur();
+  } catch(e) {
+    showToast('❌ Gagal simpan resi.', 'error');
+  }
+
+  btn.textContent = origText;
+  btn.disabled = false;
+}
+
+async function apiUpdate(rowId, fields) {
+  if (!APPS_SCRIPT_URL) throw new Error('No URL');
+  const resp = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ row_id: rowId, ...fields })
+  });
+  const data = await resp.json();
+  if (data.status !== 'ok' && data.status !== 'success') throw new Error(data.message || 'API Error');
+  return data;
+}
+
+// ==================== UI HELPERS ====================
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type || ''} show`;
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+function openSettings() {
+  document.getElementById('url-input').value = APPS_SCRIPT_URL;
+  document.getElementById('modal').classList.add('active');
+}
+
+function closeSettings(e) {
+  if (e.target === document.getElementById('modal')) {
+    document.getElementById('modal').classList.remove('active');
+  }
+}
+
+function saveSettings() {
+  const url = document.getElementById('url-input').value.trim();
+  if (!url) { showToast('⚠️ URL tidak boleh kosong', 'error'); return; }
+  APPS_SCRIPT_URL = url;
+  localStorage.setItem(STORAGE_KEY, url);
+  document.getElementById('modal').classList.remove('active');
+  loadData();
+}
+
+// ==================== INIT ====================
+loadData();
+setInterval(loadData, 60000); // auto refresh setiap 1 menit
+</script>
+</body>
+</html>
