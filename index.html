@@ -837,16 +837,7 @@
       </div>
     </div>
 
-    <div class="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input type="text" class="search-input" id="search-nama"
-        placeholder="Cari nama customer atau penerima..."
-        oninput="onSearch(this)"
-        autocomplete="off" autocorrect="off" spellcheck="false" />
-      <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
-    </div>
-
-    <div class="filter-row">
+    <div class="filter-row" style="margin-bottom:8px">
       <div class="filter-pill">
         <span class="filter-pill-icon">📅</span>
         <select class="filter-select" id="filter-tanggal" onchange="applyFilters()">
@@ -869,6 +860,15 @@
         </select>
       </div>
     </div>
+
+    <div class="search-wrap" style="margin-bottom:0">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="search-nama"
+        placeholder="Cari nama customer atau penerima..."
+        oninput="onSearch(this)"
+        autocomplete="off" autocorrect="off" spellcheck="false" />
+      <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
+    </div>
   </div>
 
   <div class="main-content" id="card-list">
@@ -884,14 +884,21 @@
 <div class="page" id="page-riwayat">
   <!-- Sticky sub-header khusus riwayat -->
   <div class="sticky-header" style="top:60px">
-    <div class="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input type="text" class="search-input" id="history-search"
-        placeholder="Cari nama, resi, ekspedisi..."
-        oninput="renderHistory()"
-        autocomplete="off" spellcheck="false" />
+    <div class="stats-row">
+      <div class="stat-chip">
+        <div class="num" id="hstat-total">—</div>
+        <div class="label">Total Dikirim</div>
+      </div>
+      <div class="stat-chip">
+        <div class="num" id="hstat-resi">—</div>
+        <div class="label">Ada Resi</div>
+      </div>
+      <div class="stat-chip">
+        <div class="num" id="hstat-today">—</div>
+        <div class="label">Hari Ini</div>
+      </div>
     </div>
-    <div class="filter-row">
+    <div class="filter-row" style="margin-bottom:8px">
       <div class="filter-pill">
         <span class="filter-pill-icon">📅</span>
         <select class="filter-select" id="history-filter-tanggal" onchange="renderHistory()">
@@ -905,19 +912,12 @@
         </select>
       </div>
     </div>
-    <div class="stats-row" style="margin-bottom:0">
-      <div class="stat-chip">
-        <div class="num" id="hstat-total">—</div>
-        <div class="label">Total Dikirim</div>
-      </div>
-      <div class="stat-chip">
-        <div class="num" id="hstat-resi">—</div>
-        <div class="label">Ada Resi</div>
-      </div>
-      <div class="stat-chip">
-        <div class="num" id="hstat-today">—</div>
-        <div class="label">Hari Ini</div>
-      </div>
+    <div class="search-wrap" style="margin-bottom:0">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="history-search"
+        placeholder="Cari nama, resi, ekspedisi..."
+        oninput="renderHistory()"
+        autocomplete="off" spellcheck="false" />
     </div>
   </div>
 
@@ -1220,7 +1220,7 @@ function buildCard(row) {
 
     <div class="resi-row">
       <input type="text" class="resi-input" placeholder="Masukkan Nomor Resi..."
-        value="${row.resi || ''}"
+        value="${row.resi != null ? String(row.resi) : ''}"
         id="resi-${row.row_id}"
         onkeydown="if(event.key==='Enter')saveResi(${row.row_id})"
         inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false"/>
@@ -1412,12 +1412,6 @@ function isTruthy(val) {
 }
 
 function renderHistory() {
-  // DEBUG - hapus setelah fix
-  console.log('allData length:', allData.length);
-  console.log('Sample diambil values:', allData.slice(0,5).map(r => ({nama: r.nama, diambil: r.diambil, type: typeof r.diambil})));
-  const diambilCount = allData.filter(r => isTruthy(r.diambil)).length;
-  console.log('isTruthy diambil count:', diambilCount);
-
   const q = (document.getElementById('history-search').value || '').toLowerCase().trim();
   const tgl = document.getElementById('history-filter-tanggal').value;
   const eksp = document.getElementById('history-filter-ekspedisi').value;
@@ -1440,14 +1434,14 @@ function renderHistory() {
   // Stats
   const today = new Date().toDateString();
   document.getElementById('hstat-total').textContent = shipped.length;
-  document.getElementById('hstat-resi').textContent = shipped.filter(r => r.resi && r.resi.trim()).length;
+  document.getElementById('hstat-resi').textContent = shipped.filter(r => r.resi && String(r.resi).trim()).length;
   document.getElementById('hstat-today').textContent = shipped.filter(r => {
     if (!r.tanggal_print) return false;
     return new Date(r.tanggal_print).toDateString() === today;
   }).length;
 
   const list = document.getElementById('history-list');
-  
+
   if (!shipped.length) {
     list.innerHTML = `<div class="empty-state">
       <span class="icon">📭</span>
@@ -1492,12 +1486,18 @@ function renderHistory() {
           ${r.tanggal_print ? `<div class="meta-pill"><span class="meta-icon">🖨️</span>Print: ${formatTgl(r.tanggal_print)}</div>` : ''}
           ${r.ongkir ? `<div class="meta-pill"><span class="meta-icon">💰</span>Rp ${Number(r.ongkir).toLocaleString('id-ID')}</div>` : ''}
         </div>
-        <div class="history-resi">
+        <div class="history-resi" id="hresi-wrap-${r.row_id}">
           <span class="history-resi-label">Resi</span>
-          ${r.resi && r.resi.trim()
-            ? `<span class="history-resi-val">${r.resi}</span>
-               <button onclick="navigator.clipboard.writeText('${r.resi}').then(()=>showToast('📋 Resi disalin!','success'))" style="border:none;background:none;cursor:pointer;font-size:16px;padding:0;flex-shrink:0">📋</button>`
-            : `<span class="history-resi-empty">Belum diisi</span>`
+          ${r.resi && String(r.resi).trim()
+            ? `<span class="history-resi-val" id="hresi-val-${r.row_id}">${r.resi}</span>
+               <button onclick="navigator.clipboard.writeText('${String(r.resi)}').then(()=>showToast('📋 Resi disalin!','success'))" style="border:none;background:none;cursor:pointer;font-size:16px;padding:0;flex-shrink:0">📋</button>`
+            : `<input type="text" id="hresi-input-${r.row_id}"
+                style="flex:1;border:none;background:transparent;font-family:monospace;font-size:13px;font-weight:600;color:#15803d;outline:none;min-width:0"
+                placeholder="Ketik resi lalu Enter..."
+                onkeydown="if(event.key==='Enter')saveHistoryResi(${r.row_id})"
+                inputmode="text" autocomplete="off" spellcheck="false" />
+               <button onclick="saveHistoryResi(${r.row_id})"
+                style="border:none;background:#16a34a;color:white;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">Simpan</button>`
           }
         </div>
         ${r.catatan ? `<div style="font-size:12px;color:#9a5a00;background:#fef3c7;border-radius:8px;padding:6px 10px;">📝 ${r.catatan}</div>` : ''}
@@ -1531,6 +1531,41 @@ function populateHistoryFilters(data) {
     o.value = e; o.textContent = e;
     ekspEl.appendChild(o);
   });
+}
+
+async function saveHistoryResi(rowId) {
+  const input = document.getElementById(`hresi-input-${rowId}`);
+  if (!input) return;
+  const resi = input.value.trim();
+  if (!resi) { showToast('⚠️ Masukkan nomor resi terlebih dahulu.', ''); return; }
+
+  const btn = input.nextElementSibling;
+  const origText = btn.textContent;
+  btn.textContent = '...';
+  btn.disabled = true;
+  input.disabled = true;
+
+  try {
+    await apiUpdate(rowId, { resi });
+    const row = allData.find(r => r.row_id == rowId);
+    if (row) row.resi = resi;
+
+    // Replace input with value display + copy button
+    const wrap = document.getElementById(`hresi-wrap-${rowId}`);
+    const label = wrap.querySelector('.history-resi-label');
+    wrap.innerHTML = '';
+    wrap.appendChild(label);
+    wrap.innerHTML += `<span class="history-resi-val">${resi}</span>
+      <button onclick="navigator.clipboard.writeText('${resi}').then(()=>showToast('📋 Resi disalin!','success'))"
+        style="border:none;background:none;cursor:pointer;font-size:16px;padding:0;flex-shrink:0">📋</button>`;
+
+    showToast('📬 Resi tersimpan!', 'success');
+  } catch(e) {
+    btn.textContent = origText;
+    btn.disabled = false;
+    input.disabled = false;
+    showToast('❌ Gagal simpan resi.', 'error');
+  }
 }
 
 loadData();
