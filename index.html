@@ -46,19 +46,21 @@
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(251,249,248,0.88);
+    background: rgba(251,249,248,0.92);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--outline-variant);
-    padding: 16px 20px 12px;
-    safe-area-inset-top: env(safe-area-inset-top);
+    padding: 12px 16px;
+  }
+  .sticky-header .header-top {
+    margin-bottom: 0;
   }
 
   .header-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 0;
   }
 
   .header-title {
@@ -136,6 +138,59 @@
     margin-top: 3px;
   }
 
+  /* ---- PRINT INFO BANNER ---- */
+  .print-banner {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%);
+    border-radius: 16px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .print-banner-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .print-banner-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .print-banner-num {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: white;
+    line-height: 1;
+  }
+  .print-banner-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05rem;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+    margin-top: 2px;
+  }
+  .print-banner-divider {
+    width: 1px;
+    height: 36px;
+    background: rgba(255,255,255,0.2);
+    flex-shrink: 0;
+  }
+  .print-banner-detail {
+    font-size: 12px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 500;
+    text-align: right;
+    line-height: 1.6;
+  }
+  .print-banner-detail strong {
+    color: white;
+    font-weight: 700;
+  }
+
   /* ---- FILTERS ---- */
   .filter-row {
     display: flex;
@@ -146,6 +201,20 @@
   }
   .filter-row::-webkit-scrollbar { display: none; }
 
+  .filter-pill {
+    flex-shrink: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .filter-pill-icon {
+    position: absolute;
+    left: 11px;
+    font-size: 13px;
+    pointer-events: none;
+    z-index: 1;
+    line-height: 1;
+  }
   .filter-select {
     flex-shrink: 0;
     border: 1.5px solid var(--outline-variant);
@@ -155,14 +224,21 @@
     font-family: 'Inter', sans-serif;
     font-size: 13px;
     font-weight: 500;
-    padding: 7px 16px;
+    padding: 7px 16px 7px 32px;
     outline: none;
     cursor: pointer;
     -webkit-appearance: none;
     appearance: none;
-    max-width: 160px;
+    max-width: 170px;
+    transition: border-color 0.2s, background 0.2s;
   }
   .filter-select:focus { border-color: var(--primary); }
+  .filter-select.active {
+    border-color: var(--primary);
+    background: #eef2ff;
+    color: var(--primary);
+    font-weight: 600;
+  }
 
   /* ---- MAIN ---- */
   .main-content {
@@ -502,6 +578,54 @@
   }
   .primary-btn:active { opacity: 0.85; transform: scale(0.98); }
 
+  /* ---- SEARCH BAR ---- */
+  .search-wrap {
+    position: relative;
+    margin-bottom: 10px;
+  }
+  .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 15px;
+    pointer-events: none;
+    opacity: 0.45;
+  }
+  .search-input {
+    width: 100%;
+    padding: 10px 16px 10px 40px;
+    border: 1.5px solid var(--outline-variant);
+    border-radius: 20px;
+    background: var(--surface-card);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--on-surface);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--primary); }
+  .search-input::placeholder { color: var(--on-surface-muted); font-weight: 400; }
+  .search-clear {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--outline-variant);
+    border: none;
+    border-radius: 50%;
+    width: 20px; height: 20px;
+    font-size: 11px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: var(--on-surface);
+    font-weight: 700;
+  }
+  .search-clear.visible { display: flex; }
+
   /* ---- CARD ANIMATIONS ---- */
   .card-enter {
     animation: cardIn 0.3s ease;
@@ -518,11 +642,153 @@
   @keyframes cardOut {
     to { opacity: 0; transform: translateX(60px); max-height: 0; margin: 0; padding: 0; }
   }
+
+  /* ---- BOTTOM NAV ---- */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 200;
+    background: rgba(251,249,248,0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--outline-variant);
+    display: flex;
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+  }
+  .nav-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 8px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .nav-tab-icon {
+    font-size: 22px;
+    line-height: 1;
+    transition: transform 0.2s;
+  }
+  .nav-tab-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04rem;
+    text-transform: uppercase;
+    color: var(--on-surface-muted);
+    transition: color 0.2s;
+  }
+  .nav-tab.active .nav-tab-label { color: var(--primary); font-weight: 700; }
+  .nav-tab.active .nav-tab-icon { transform: scale(1.15); }
+  .nav-tab-badge {
+    position: absolute;
+    top: 2px; right: calc(50% - 18px);
+    background: #ef4444;
+    color: white;
+    font-size: 9px;
+    font-weight: 800;
+    border-radius: 20px;
+    padding: 1px 5px;
+    min-width: 16px;
+    text-align: center;
+    line-height: 14px;
+  }
+  .nav-tab { position: relative; }
+
+  /* ---- PAGE VIEWS ---- */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ---- HISTORY PAGE ---- */
+
+
+  .history-list {
+    padding: 12px 16px 100px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  .history-card {
+    background: var(--surface-card);
+    border-radius: 16px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 8px rgba(27,28,28,0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: cardIn 0.25s ease;
+  }
+  .history-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .history-card-nama {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 16px; font-weight: 700;
+    color: var(--on-surface);
+    flex: 1;
+  }
+  .history-card-penerima {
+    font-size: 12px; color: var(--on-surface-muted);
+    margin-top: 1px;
+  }
+  .history-card-penerima span { font-weight: 600; color: var(--on-surface); }
+  .history-card-meta {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    align-items: center;
+  }
+  .meta-pill {
+    display: flex; align-items: center; gap: 4px;
+    background: var(--surface-low);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px; font-weight: 600;
+    color: var(--on-surface);
+  }
+  .meta-pill .meta-icon { font-size: 13px; }
+  .history-resi {
+    display: flex; align-items: center; gap: 6px;
+    background: #f0fdf4;
+    border-radius: 10px;
+    padding: 8px 12px;
+  }
+  .history-resi-label {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04rem;
+    color: #166534;
+    white-space: nowrap;
+  }
+  .history-resi-val {
+    font-family: monospace;
+    font-size: 14px; font-weight: 700;
+    color: #15803d;
+    word-break: break-all;
+    flex: 1;
+  }
+  .history-resi-empty {
+    font-size: 12px;
+    color: var(--on-surface-muted);
+    font-style: italic;
+  }
+
+  .history-group-label {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.07rem; text-transform: uppercase;
+    color: var(--on-surface-muted);
+    padding: 4px 0 0;
+  }
+
 </style>
 </head>
 <body>
 
 <!-- STICKY HEADER -->
+<!-- SHARED TOP BAR (judul + tombol saja) -->
 <div class="sticky-header">
   <div class="header-top">
     <div>
@@ -534,50 +800,147 @@
       <button class="icon-btn" id="refresh-btn" onclick="loadData()" title="Refresh">↻</button>
     </div>
   </div>
+</div>
 
-  <div class="stats-row">
-    <div class="stat-chip">
-      <div class="num" id="stat-total">—</div>
-      <div class="label">Antrian</div>
+<!-- PAGE: ANTRIAN -->
+<div class="page active" id="page-antrian">
+  <!-- Sticky sub-header khusus antrian -->
+  <div class="sticky-header" style="top:60px">
+    <div id="print-banner" class="print-banner" style="display:none">
+      <div class="print-banner-left">
+        <div class="print-banner-icon">🖨️</div>
+        <div>
+          <div class="print-banner-num" id="stat-printed">—</div>
+          <div class="print-banner-label">Sudah Diprint</div>
+        </div>
+      </div>
+      <div class="print-banner-divider"></div>
+      <div class="print-banner-detail" id="print-banner-detail">—</div>
     </div>
-    <div class="stat-chip">
-      <div class="num" id="stat-belum-packing">—</div>
-      <div class="label">Belum Packing</div>
+
+    <div class="stats-row" style="margin-top:10px">
+      <div class="stat-chip">
+        <div class="num" id="stat-total">—</div>
+        <div class="label">Antrian</div>
+      </div>
+      <div class="stat-chip">
+        <div class="num" id="stat-belum-packing">—</div>
+        <div class="label">Belum Packing</div>
+      </div>
+      <div class="stat-chip">
+        <div class="num" id="stat-siap-kurir">—</div>
+        <div class="label">Siap Kurir</div>
+      </div>
+      <div class="stat-chip">
+        <div class="num" id="stat-shipped">—</div>
+        <div class="label">Diambil</div>
+      </div>
     </div>
-    <div class="stat-chip">
-      <div class="num" id="stat-siap-kurir">—</div>
-      <div class="label">Siap Kurir</div>
+
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="search-nama"
+        placeholder="Cari nama customer atau penerima..."
+        oninput="onSearch(this)"
+        autocomplete="off" autocorrect="off" spellcheck="false" />
+      <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
     </div>
-    <div class="stat-chip">
-      <div class="num" id="stat-shipped">—</div>
-      <div class="label">Diambil</div>
+
+    <div class="filter-row">
+      <div class="filter-pill">
+        <span class="filter-pill-icon">📅</span>
+        <select class="filter-select" id="filter-tanggal" onchange="applyFilters()">
+          <option value="">Tanggal Print</option>
+        </select>
+      </div>
+      <div class="filter-pill">
+        <span class="filter-pill-icon">🚚</span>
+        <select class="filter-select" id="filter-ekspedisi" onchange="applyFilters()">
+          <option value="">Ekspedisi</option>
+        </select>
+      </div>
+      <div class="filter-pill">
+        <span class="filter-pill-icon">🏷️</span>
+        <select class="filter-select" id="filter-status" onchange="applyFilters()">
+          <option value="">Status</option>
+          <option value="waiting">⏳ Menunggu</option>
+          <option value="printed">🖨️ Sudah Print</option>
+          <option value="packing">📦 Sedang Packing</option>
+        </select>
+      </div>
     </div>
   </div>
 
-  <div class="filter-row">
-    <select class="filter-select" id="filter-tanggal" onchange="applyFilters()">
-      <option value="">Semua Tanggal</option>
-    </select>
-    <select class="filter-select" id="filter-ekspedisi" onchange="applyFilters()">
-      <option value="">Semua Ekspedisi</option>
-    </select>
-    <select class="filter-select" id="filter-status" onchange="applyFilters()">
-      <option value="">Semua Status</option>
-      <option value="waiting">Menunggu</option>
-      <option value="printed">Sudah Print</option>
-      <option value="packing">Sedang Packing</option>
-    </select>
+  <div class="main-content" id="card-list">
+    <div class="empty-state">
+      <span class="icon">⏳</span>
+      <h3>Memuat antrian...</h3>
+      <p>Sedang mengambil data dari Google Sheets</p>
+    </div>
   </div>
 </div>
 
-<!-- MAIN CONTENT -->
-<div class="main-content" id="card-list">
-  <div class="empty-state">
-    <span class="icon">⏳</span>
-    <h3>Memuat antrian...</h3>
-    <p>Sedang mengambil data dari Google Sheets</p>
+<!-- PAGE: RIWAYAT -->
+<div class="page" id="page-riwayat">
+  <!-- Sticky sub-header khusus riwayat -->
+  <div class="sticky-header" style="top:60px">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="history-search"
+        placeholder="Cari nama, resi, ekspedisi..."
+        oninput="renderHistory()"
+        autocomplete="off" spellcheck="false" />
+    </div>
+    <div class="filter-row">
+      <div class="filter-pill">
+        <span class="filter-pill-icon">📅</span>
+        <select class="filter-select" id="history-filter-tanggal" onchange="renderHistory()">
+          <option value="">Tanggal Print</option>
+        </select>
+      </div>
+      <div class="filter-pill">
+        <span class="filter-pill-icon">🚚</span>
+        <select class="filter-select" id="history-filter-ekspedisi" onchange="renderHistory()">
+          <option value="">Ekspedisi</option>
+        </select>
+      </div>
+    </div>
+    <div class="stats-row" style="margin-bottom:0">
+      <div class="stat-chip">
+        <div class="num" id="hstat-total">—</div>
+        <div class="label">Total Dikirim</div>
+      </div>
+      <div class="stat-chip">
+        <div class="num" id="hstat-resi">—</div>
+        <div class="label">Ada Resi</div>
+      </div>
+      <div class="stat-chip">
+        <div class="num" id="hstat-today">—</div>
+        <div class="label">Hari Ini</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="history-list" id="history-list">
+    <div class="empty-state">
+      <span class="icon">⏳</span>
+      <h3>Memuat riwayat...</h3>
+    </div>
   </div>
 </div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-tab active" id="tab-antrian" onclick="switchTab('antrian')">
+    <span class="nav-tab-icon">📦</span>
+    <span class="nav-tab-label">Antrian</span>
+    <span class="nav-tab-badge" id="nav-badge" style="display:none">0</span>
+  </button>
+  <button class="nav-tab" id="tab-riwayat" onclick="switchTab('riwayat')">
+    <span class="nav-tab-icon">📋</span>
+    <span class="nav-tab-label">Riwayat</span>
+  </button>
+</nav>
 
 <!-- SETTINGS MODAL -->
 <div class="modal-backdrop" id="modal" onclick="closeSettings(event)">
@@ -600,7 +963,7 @@
 
 <script>
 const STORAGE_KEY = 'admin_packing_url_v2';
-let APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNG9FmIA_TmjlrZ0i6hsYYX83U1y7njKA.../exec';
+let APPS_SCRIPT_URL = localStorage.getItem(STORAGE_KEY) || '';
 let allData = [];
 let savingSet = new Set();
 
@@ -626,6 +989,7 @@ async function loadData() {
 
     allData = data;
     populateFilters(allData);
+    populateHistoryFilters(allData);
     updateStats(allData);
     applyFilters();
 
@@ -646,7 +1010,7 @@ async function loadData() {
 // ==================== FILTER & RENDER ====================
 
 function getStatus(row) {
-  if (row.diambil) return 'shipped';
+  if (isTruthy(row.diambil)) return 'shipped';
   if (row.packing) return 'packing';
   if (row.tanggal_print) return 'printed';
   return 'waiting';
@@ -665,13 +1029,23 @@ function formatTgl(str) {
   } catch(e) { return str; }
 }
 
+function updateFilterActiveState() {
+  ['filter-tanggal','filter-ekspedisi','filter-status'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('active', el.value !== '');
+  });
+}
+
 function applyFilters() {
+  updateFilterActiveState();
   const tgl = document.getElementById('filter-tanggal').value;
   const eksp = document.getElementById('filter-ekspedisi').value;
   const st = document.getElementById('filter-status').value;
+  const q = (document.getElementById('search-nama').value || '').toLowerCase().trim();
 
   const filtered = allData.filter(row => {
-    if (row.diambil) return false;
+    if (isTruthy(row.diambil)) return false;
+    if (!row.nama || !row.nama.toString().trim()) return false;
     const status = getStatus(row);
     if (tgl) {
       const rowTgl = row.tanggal_print ? row.tanggal_print.substring(0, 10) : '';
@@ -679,10 +1053,26 @@ function applyFilters() {
     }
     if (eksp && row.ekspedisi !== eksp) return false;
     if (st && status !== st) return false;
+    if (q) {
+      const nama = (row.nama || '').toLowerCase();
+      const penerima = (row.nama_penerima || '').toLowerCase();
+      if (!nama.includes(q) && !penerima.includes(q)) return false;
+    }
     return true;
   });
 
   renderCards(filtered);
+}
+
+function onSearch(input) {
+  document.getElementById('search-clear').classList.toggle('visible', input.value.length > 0);
+  applyFilters();
+}
+
+function clearSearch() {
+  document.getElementById('search-nama').value = '';
+  document.getElementById('search-clear').classList.remove('visible');
+  applyFilters();
 }
 
 function populateFilters(data) {
@@ -715,12 +1105,44 @@ function populateFilters(data) {
   });
 }
 
+function hasNama(r) { return r.nama && r.nama.toString().trim(); }
+
 function updateStats(data) {
-  const active = data.filter(r => !r.diambil);
+  const valid = data.filter(r => hasNama(r));
+  const active = valid.filter(r => !isTruthy(r.diambil));
   document.getElementById('stat-total').textContent = active.length;
+  const badge = document.getElementById('nav-badge');
+  if (active.length > 0) { badge.style.display = 'block'; badge.textContent = active.length; }
+  else { badge.style.display = 'none'; }
   document.getElementById('stat-belum-packing').textContent = active.filter(r => !r.packing).length;
   document.getElementById('stat-siap-kurir').textContent = active.filter(r => r.packing).length;
-  document.getElementById('stat-shipped').textContent = data.filter(r => r.diambil).length;
+  document.getElementById('stat-shipped').textContent = valid.filter(r => isTruthy(r.diambil)).length;
+
+  // Print banner
+  const printed = active.filter(r => r.tanggal_print);
+  const printedCount = printed.length;
+  const banner = document.getElementById('print-banner');
+  const statPrinted = document.getElementById('stat-printed');
+  const detail = document.getElementById('print-banner-detail');
+
+  if (printedCount > 0) {
+    banner.style.display = 'flex';
+    statPrinted.textContent = printedCount;
+    // Group by tanggal print
+    const byDate = {};
+    printed.forEach(r => {
+      const tgl = r.tanggal_print ? formatTgl(r.tanggal_print) : '—';
+      byDate[tgl] = (byDate[tgl] || 0) + 1;
+    });
+    const lines = Object.entries(byDate)
+      .sort((a,b) => b[0].localeCompare(a[0]))
+      .slice(0, 2)
+      .map(([tgl, n]) => `<strong>${n} paket</strong> · ${tgl}`)
+      .join('<br>');
+    detail.innerHTML = lines;
+  } else {
+    banner.style.display = 'none';
+  }
 }
 
 function sortData(data) {
@@ -764,6 +1186,13 @@ function renderCards(data) {
   }
 }
 
+function highlight(text) {
+  const q = (document.getElementById('search-nama').value || '').trim();
+  if (!q) return text;
+  const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  return text.replace(regex, '<mark style="background:#fef08a;border-radius:3px;padding:0 2px;">$1</mark>');
+}
+
 function buildCard(row) {
   const status = getStatus(row);
   const card = document.createElement('div');
@@ -784,8 +1213,8 @@ function buildCard(row) {
       </div>
     </div>
 
-    <div class="customer-name">${row.nama || '—'}</div>
-    <div class="recipient-name">Penerima: <span>${row.nama_penerima || '—'}</span></div>
+    ${row.nama ? `<div class="customer-name">${highlight(row.nama)}</div>` : ''}
+    ${row.nama_penerima ? `<div class="recipient-name">Penerima: <span>${highlight(row.nama_penerima)}</span></div>` : ''}
 
     ${row.catatan ? `<div style="font-size:12px;color:#9a5a00;background:#fef3c7;border-radius:8px;padding:6px 10px;margin-bottom:12px;">📝 ${row.catatan}</div>` : ''}
 
@@ -962,6 +1391,148 @@ function saveSettings() {
 }
 
 // ==================== INIT ====================
+
+// ==================== TAB NAVIGATION ====================
+
+let activeTab = 'antrian';
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`page-${tab}`).classList.add('active');
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  if (tab === 'riwayat') renderHistory();
+}
+
+// ==================== HISTORY PAGE ====================
+
+function isTruthy(val) {
+  return val === true || val === 'true' || val === 'TRUE' || val === 1 || val === '1';
+}
+
+function renderHistory() {
+  // DEBUG - hapus setelah fix
+  console.log('allData length:', allData.length);
+  console.log('Sample diambil values:', allData.slice(0,5).map(r => ({nama: r.nama, diambil: r.diambil, type: typeof r.diambil})));
+  const diambilCount = allData.filter(r => isTruthy(r.diambil)).length;
+  console.log('isTruthy diambil count:', diambilCount);
+
+  const q = (document.getElementById('history-search').value || '').toLowerCase().trim();
+  const tgl = document.getElementById('history-filter-tanggal').value;
+  const eksp = document.getElementById('history-filter-ekspedisi').value;
+
+  const shipped = allData.filter(r => {
+    if (!isTruthy(r.diambil)) return false;
+    if (!r.nama || !r.nama.toString().trim()) return false;
+    if (q) {
+      const searchable = [r.nama, r.nama_penerima, r.resi, r.ekspedisi].join(' ').toLowerCase();
+      if (!searchable.includes(q)) return false;
+    }
+    if (eksp && r.ekspedisi !== eksp) return false;
+    if (tgl) {
+      const rowTgl = r.tanggal_print ? r.tanggal_print.substring(0, 10) : '';
+      if (rowTgl !== tgl) return false;
+    }
+    return true;
+  });
+
+  // Stats
+  const today = new Date().toDateString();
+  document.getElementById('hstat-total').textContent = shipped.length;
+  document.getElementById('hstat-resi').textContent = shipped.filter(r => r.resi && r.resi.trim()).length;
+  document.getElementById('hstat-today').textContent = shipped.filter(r => {
+    if (!r.tanggal_print) return false;
+    return new Date(r.tanggal_print).toDateString() === today;
+  }).length;
+
+  const list = document.getElementById('history-list');
+
+  if (!shipped.length) {
+    list.innerHTML = `<div class="empty-state">
+      <span class="icon">📭</span>
+      <h3>Belum ada riwayat</h3>
+      <p>Paket yang sudah diambil kurir akan tampil di sini.</p>
+    </div>`;
+    return;
+  }
+
+  // Group by tanggal print
+  const groups = {};
+  shipped.forEach(r => {
+    const key = r.tanggal_print ? r.tanggal_print.substring(0, 10) : 'Tanggal tidak diketahui';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  });
+
+  // Sort dates descending
+  const sortedKeys = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+
+  list.innerHTML = '';
+  sortedKeys.forEach(key => {
+    const label = document.createElement('div');
+    label.className = 'history-group-label';
+    const dateLabel = key === 'Tanggal tidak diketahui' ? key : formatTgl(key + 'T00:00:00');
+    label.textContent = `📅 ${dateLabel} · ${groups[key].length} paket`;
+    list.appendChild(label);
+
+    groups[key].forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'history-card';
+      card.innerHTML = `
+        <div class="history-card-top">
+          <div>
+            <div class="history-card-nama">${r.nama}</div>
+            ${r.nama_penerima ? `<div class="history-card-penerima">Penerima: <span>${r.nama_penerima}</span></div>` : ''}
+          </div>
+          ${r.no_antrian ? `<span style="font-family:'Public Sans',sans-serif;font-size:18px;font-weight:800;color:var(--primary);opacity:0.4">#${String(r.no_antrian).padStart(3,'0')}</span>` : ''}
+        </div>
+        <div class="history-card-meta">
+          ${r.ekspedisi ? `<div class="meta-pill"><span class="meta-icon">🚚</span>${r.ekspedisi}</div>` : ''}
+          ${r.tanggal_print ? `<div class="meta-pill"><span class="meta-icon">🖨️</span>Print: ${formatTgl(r.tanggal_print)}</div>` : ''}
+          ${r.ongkir ? `<div class="meta-pill"><span class="meta-icon">💰</span>Rp ${Number(r.ongkir).toLocaleString('id-ID')}</div>` : ''}
+        </div>
+        <div class="history-resi">
+          <span class="history-resi-label">Resi</span>
+          ${r.resi && r.resi.trim()
+            ? `<span class="history-resi-val">${r.resi}</span>
+               <button onclick="navigator.clipboard.writeText('${r.resi}').then(()=>showToast('📋 Resi disalin!','success'))" style="border:none;background:none;cursor:pointer;font-size:16px;padding:0;flex-shrink:0">📋</button>`
+            : `<span class="history-resi-empty">Belum diisi</span>`
+          }
+        </div>
+        ${r.catatan ? `<div style="font-size:12px;color:#9a5a00;background:#fef3c7;border-radius:8px;padding:6px 10px;">📝 ${r.catatan}</div>` : ''}
+      `;
+      list.appendChild(card);
+    });
+  });
+}
+
+function populateHistoryFilters(data) {
+  const shipped = data.filter(r => isTruthy(r.diambil) && r.nama && r.nama.toString().trim());
+  const tglSet = new Set();
+  const ekspSet = new Set();
+  shipped.forEach(r => {
+    if (r.tanggal_print) tglSet.add(r.tanggal_print.substring(0, 10));
+    if (r.ekspedisi) ekspSet.add(r.ekspedisi);
+  });
+
+  const tglEl = document.getElementById('history-filter-tanggal');
+  tglEl.innerHTML = '<option value="">Semua Tanggal</option>';
+  [...tglSet].sort().reverse().forEach(t => {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = formatTgl(t + 'T00:00:00');
+    tglEl.appendChild(o);
+  });
+
+  const ekspEl = document.getElementById('history-filter-ekspedisi');
+  ekspEl.innerHTML = '<option value="">Semua Ekspedisi</option>';
+  [...ekspSet].sort().forEach(e => {
+    const o = document.createElement('option');
+    o.value = e; o.textContent = e;
+    ekspEl.appendChild(o);
+  });
+}
+
 loadData();
 setInterval(loadData, 60000); // auto refresh setiap 1 menit
 </script>
