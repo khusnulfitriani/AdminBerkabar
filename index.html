@@ -1693,39 +1693,38 @@ function populateHistoryFilters(data) {
   });
 }
 
-async function saveHistoryResi(rowId) {
+function saveHistoryResi(rowId) {
   const input = document.getElementById(`hresi-input-${rowId}`);
   if (!input) return;
   const resi = input.value.trim();
   if (!resi) { showToast('⚠️ Masukkan nomor resi terlebih dahulu.', ''); return; }
 
-  const btn = input.nextElementSibling;
-  const origText = btn.textContent;
-  btn.textContent = '...';
-  btn.disabled = true;
-  input.disabled = true;
+  const row = allData.find(r => r.row_id == rowId);
+  const oldResi = row ? row.resi : '';
+  if (row) row.resi = resi;
 
-  try {
-    await apiUpdate(rowId, { resi });
-    const row = allData.find(r => r.row_id == rowId);
-    if (row) row.resi = resi;
+  const wrap = document.getElementById(`hresi-wrap-${rowId}`);
+  const label = wrap.querySelector('.history-resi-label');
+  const originalHTML = wrap.innerHTML;
 
-    // Replace input with value display + copy button
-    const wrap = document.getElementById(`hresi-wrap-${rowId}`);
-    const label = wrap.querySelector('.history-resi-label');
+  wrap.innerHTML = '';
+  wrap.appendChild(label);
+  wrap.innerHTML += `<span class="history-resi-val">${resi}</span>
+    <span style="font-size:12px;color:var(--primary);margin-left:8px;font-style:italic;" id="hresi-status-${rowId}">Menyimpan...</span>`;
+
+  apiUpdate(rowId, { resi }).then(() => {
     wrap.innerHTML = '';
     wrap.appendChild(label);
     wrap.innerHTML += `<span class="history-resi-val">${resi}</span>
       <button onclick="navigator.clipboard.writeText('${resi}').then(()=>showToast('📋 Resi disalin!','success'))"
         style="border:none;background:none;cursor:pointer;font-size:16px;padding:0;flex-shrink:0">📋</button>`;
-
-    showToast('📬 Resi tersimpan!', 'success');
-  } catch(e) {
-    btn.textContent = origText;
-    btn.disabled = false;
-    input.disabled = false;
-    showToast('❌ Gagal simpan resi.', 'error');
-  }
+  }).catch(e => {
+    if (row) row.resi = oldResi;
+    wrap.innerHTML = originalHTML;
+    const restoredInput = document.getElementById(`hresi-input-${rowId}`);
+    if (restoredInput) restoredInput.value = resi;
+    showToast('❌ Gagal simpan resi, silakan coba lagi.', 'error');
+  });
 }
 
 loadData();
