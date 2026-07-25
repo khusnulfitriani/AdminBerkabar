@@ -783,6 +783,63 @@
     padding: 4px 0 0;
   }
 
+  /* ---- SKELETON LOADER ---- */
+  .skeleton-card {
+    background: var(--surface-card);
+    border-radius: 20px;
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 8px rgba(27,28,28,0.04);
+  }
+  .skeleton-line {
+    background: #e2e8f0;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    animation: shimmer 1.5s infinite linear;
+    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 200% 100%;
+  }
+  .skeleton-title { width: 50%; height: 24px; margin-bottom: 16px; }
+  .skeleton-text { width: 80%; height: 14px; }
+  .skeleton-text.short { width: 40%; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* ---- SUMMARY / RINGKASAN UI ---- */
+  .ringkasan-list {
+    padding: 12px 16px 100px;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+  .ringkasan-group-title {
+    font-family: 'Public Sans', sans-serif;
+    font-size: 16px; font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 2px solid var(--outline-variant);
+    padding-bottom: 6px;
+  }
+  .ringkasan-items {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .ringkasan-item {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface-card);
+    padding: 10px 14px;
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    font-size: 14px; font-weight: 600;
+    color: var(--on-surface);
+    cursor: pointer;
+  }
+  .ringkasan-item .eksp {
+    background: var(--surface-low);
+    color: var(--primary);
+    font-size: 10px; font-weight: 800;
+    padding: 3px 6px; border-radius: 6px;
+    text-transform: uppercase;
+  }
+  .ringkasan-item .name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
 </style>
 </head>
 <body>
@@ -929,12 +986,33 @@
   </div>
 </div>
 
+<!-- PAGE: RINGKASAN -->
+<div class="page" id="page-ringkasan">
+  <div class="sticky-header" style="top:60px">
+    <div class="search-wrap" style="margin-bottom:0">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="ringkasan-search"
+        placeholder="Cari nama pelanggan..."
+        oninput="renderRingkasan()"
+        autocomplete="off" spellcheck="false" />
+    </div>
+  </div>
+  <div class="ringkasan-list" id="ringkasan-list">
+    <!-- Populated by JS -->
+  </div>
+</div>
+
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
   <button class="nav-tab active" id="tab-antrian" onclick="switchTab('antrian')">
     <span class="nav-tab-icon">📦</span>
     <span class="nav-tab-label">Antrian</span>
     <span class="nav-tab-badge" id="nav-badge" style="display:none">0</span>
+  </button>
+  <button class="nav-tab" id="tab-ringkasan" onclick="switchTab('ringkasan')">
+    <span class="nav-tab-icon">⚡</span>
+    <span class="nav-tab-label">Ringkasan</span>
+    <span class="nav-tab-badge" id="ringkasan-badge" style="display:none">0</span>
   </button>
   <button class="nav-tab" id="tab-riwayat" onclick="switchTab('riwayat')">
     <span class="nav-tab-icon">📋</span>
@@ -963,16 +1041,55 @@
 
 <script>
 const STORAGE_KEY = 'admin_packing_url_v2';
-let APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNG9FmIA_TmjIrZ0i6hsYYX83U1y7njKAP-MuPbuUan2PxmMDKKGAn6oOIrvnq0HQckA/exec';
+const DATA_CACHE_KEY = 'admin_packing_data_cache';
+let APPS_SCRIPT_URL = 'https://admin-packing-proxy.khusnulfitrianinund.workers.dev';
 let allData = [];
 let savingSet = new Set();
 
 // ==================== DATA LOADING ====================
 
+function showSkeleton() {
+  const list = document.getElementById('card-list');
+  list.innerHTML = `
+    <div class="skeleton-card"><div class="skeleton-line skeleton-title"></div><div class="skeleton-line skeleton-text"></div><div class="skeleton-line skeleton-text short"></div></div>
+    <div class="skeleton-card"><div class="skeleton-line skeleton-title"></div><div class="skeleton-line skeleton-text"></div><div class="skeleton-line skeleton-text short"></div></div>
+    <div class="skeleton-card"><div class="skeleton-line skeleton-title"></div><div class="skeleton-line skeleton-text"></div><div class="skeleton-line skeleton-text short"></div></div>
+  `;
+}
+
+function processData(data, fromCache = false) {
+  allData = data;
+  populateFilters(allData);
+  populateHistoryFilters(allData);
+  updateStats(allData);
+  applyFilters();
+  if (activeTab === 'ringkasan') renderRingkasan();
+  if (activeTab === 'riwayat') renderHistory();
+  
+  if (!fromCache) {
+    localStorage.setItem(DATA_CACHE_KEY, JSON.stringify(data));
+    const now = new Date();
+    document.getElementById('last-update').textContent = 'Update: ' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  } else {
+    document.getElementById('last-update').textContent = 'Mensinkronisasi...';
+  }
+}
+
 async function loadData() {
   const btn = document.getElementById('refresh-btn');
   btn.classList.add('spinning');
-  document.getElementById('last-update').textContent = 'Memuat...';
+
+  // INSTANT LOAD FROM CACHE
+  if (allData.length === 0) {
+    const cached = localStorage.getItem(DATA_CACHE_KEY);
+    if (cached) {
+      try { processData(JSON.parse(cached), true); } catch(e){}
+    } else {
+      showSkeleton();
+    }
+  } else {
+    document.getElementById('last-update').textContent = 'Mensinkronisasi...';
+  }
 
   if (!APPS_SCRIPT_URL) {
     openSettings();
@@ -986,22 +1103,17 @@ async function loadData() {
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
     if (!Array.isArray(data)) throw new Error('Format data tidak valid');
-
-    allData = data;
-    populateFilters(allData);
-    populateHistoryFilters(allData);
-    updateStats(allData);
-    applyFilters();
-
-    const now = new Date();
-    document.getElementById('last-update').textContent =
-      'Update: ' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-
+    
+    processData(data, false);
   } catch(e) {
     console.error(e);
-    document.getElementById('last-update').textContent = 'Gagal memuat';
-    showToast('❌ Gagal koneksi ke Sheets', 'error');
-    showEmptyState('⚠️', 'Gagal memuat data', 'Pastikan URL Apps Script benar dan bisa diakses publik.');
+    if (allData.length === 0) {
+      document.getElementById('last-update').textContent = 'Gagal memuat';
+      showToast('❌ Gagal koneksi ke API', 'error');
+      showEmptyState('⚠️', 'Gagal memuat data', 'Pastikan URL API benar dan bisa diakses.');
+    } else {
+      document.getElementById('last-update').textContent = 'Offline (Menggunakan Cache)';
+    }
   }
 
   btn.classList.remove('spinning');
@@ -1403,6 +1515,74 @@ function switchTab(tab) {
   document.getElementById(`page-${tab}`).classList.add('active');
   document.getElementById(`tab-${tab}`).classList.add('active');
   if (tab === 'riwayat') renderHistory();
+  if (tab === 'ringkasan') renderRingkasan();
+}
+
+// ==================== RINGKASAN PAGE ====================
+function renderRingkasan() {
+  const q = (document.getElementById('ringkasan-search').value || '').toLowerCase().trim();
+  const list = document.getElementById('ringkasan-list');
+  
+  const valid = allData.filter(r => hasNama(r) && !isTruthy(r.diambil));
+  
+  const filtered = valid.filter(r => {
+    if (!q) return true;
+    const searchable = [r.nama, r.ekspedisi].join(' ').toLowerCase();
+    return searchable.includes(q);
+  });
+  
+  const belumPacking = filtered.filter(r => !r.packing);
+  const siapAmbil = filtered.filter(r => r.packing);
+  
+  const badge = document.getElementById('ringkasan-badge');
+  if (valid.length > 0) {
+    badge.style.display = 'block'; badge.textContent = valid.length;
+  } else {
+    badge.style.display = 'none';
+  }
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state">
+      <span class="icon">✅</span>
+      <h3>Semua Beres!</h3>
+      <p>Tidak ada antrian yang tersisa.</p>
+    </div>`;
+    return;
+  }
+  
+  let html = '';
+  
+  if (belumPacking.length > 0) {
+    html += `<div class="ringkasan-group-title">
+      <span>📦 Belum Packing</span>
+      <span style="font-size:12px;opacity:0.7">${belumPacking.length} paket</span>
+    </div>
+    <div class="ringkasan-items">`;
+    belumPacking.forEach(r => {
+      html += `<div class="ringkasan-item" onclick="switchTab('antrian')">
+        ${r.ekspedisi ? `<span class="eksp">${r.ekspedisi}</span>` : ''}
+        <span class="name">${r.nama}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  
+  if (siapAmbil.length > 0) {
+    html += `<div class="ringkasan-group-title" style="margin-top:16px;color:#16a34a;border-bottom-color:#bbf7d0">
+      <span>🚚 Siap Diambil Kurir</span>
+      <span style="font-size:12px;opacity:0.7">${siapAmbil.length} paket</span>
+    </div>
+    <div class="ringkasan-items">`;
+    siapAmbil.forEach(r => {
+      html += `<div class="ringkasan-item" style="border-left:3px solid #16a34a" onclick="switchTab('antrian')">
+        ${r.ekspedisi ? `<span class="eksp">${r.ekspedisi}</span>` : ''}
+        <span class="name">${r.nama}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  
+  list.innerHTML = html;
 }
 
 // ==================== HISTORY PAGE ====================
