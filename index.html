@@ -1311,7 +1311,7 @@ function showEmptyState(icon, title, desc) {
 
 // ==================== ACTIONS ====================
 
-async function togglePacking(rowId) {
+function togglePacking(rowId) {
   if (savingSet.has(`p-${rowId}`)) return;
   savingSet.add(`p-${rowId}`);
 
@@ -1320,94 +1320,51 @@ async function togglePacking(rowId) {
 
   const newVal = !row.packing;
 
-  const chk = document.getElementById(`chk-packing-${rowId}`);
-  const lbl = document.getElementById(`lbl-packing-${rowId}`);
-  const card = document.getElementById(`card-${rowId}`);
-  const badge = document.getElementById(`badge-status-${rowId}`);
-  const btnRingkasan = document.getElementById(`btn-ringkasan-packing-${rowId}`);
+  // Optimistic update
+  row.packing = newVal;
+  updateStats(allData);
+  applyFilters();
+  if (activeTab === 'ringkasan') renderRingkasan();
 
-  if (chk) chk.classList.toggle('checked', newVal);
-  if (lbl) lbl.classList.toggle('checked-label', newVal);
-  if (btnRingkasan) {
-    btnRingkasan.disabled = true;
-    btnRingkasan.textContent = '...';
-  }
-
-  if (card) {
-    if (newVal) {
-      card.classList.add('packing-done', 'status-packing');
-      card.classList.remove('status-waiting', 'status-printed');
-      if (badge) { badge.className = 'badge badge-packing'; badge.textContent = 'Sedang Packing'; }
-    } else {
-      card.classList.remove('packing-done', 'status-packing');
-      card.classList.add(row.tanggal_print ? 'status-printed' : 'status-waiting');
-      if (badge) {
-        const st = row.tanggal_print ? 'printed' : 'waiting';
-        badge.className = `badge badge-${st}`;
-        badge.textContent = statusLabel(st);
-      }
-    }
-  }
-
-  try {
-    await apiUpdate(rowId, { packing: newVal });
-    row.packing = newVal;
-    updateStats(allData);
-    if (activeTab === 'ringkasan') renderRingkasan();
+  apiUpdate(rowId, { packing: newVal }).then(() => {
     showToast(newVal ? '✅ Packing selesai ditandai!' : '↩️ Packing dibatalkan', 'success');
-  } catch(e) {
-    if (chk) chk.classList.toggle('checked', !newVal);
-    if (lbl) lbl.classList.toggle('checked-label', !newVal);
-    if (btnRingkasan) {
-      btnRingkasan.disabled = false;
-      btnRingkasan.textContent = '📦 Kemas';
-    }
+    savingSet.delete(`p-${rowId}`);
+  }).catch(e => {
+    row.packing = !newVal;
+    updateStats(allData);
+    applyFilters();
+    if (activeTab === 'ringkasan') renderRingkasan();
     showToast('❌ Gagal menyimpan. Coba lagi.', 'error');
-  }
-
-  savingSet.delete(`p-${rowId}`);
+    savingSet.delete(`p-${rowId}`);
+  });
 }
 
-async function toggleDiambil(rowId) {
+function toggleDiambil(rowId) {
   if (savingSet.has(`d-${rowId}`)) return;
   savingSet.add(`d-${rowId}`);
 
-  const chk = document.getElementById(`chk-diambil-${rowId}`);
-  const card = document.getElementById(`card-${rowId}`);
-  const btnRingkasan = document.getElementById(`btn-ringkasan-diambil-${rowId}`);
-  
-  if (chk) chk.classList.add('checked');
-  if (btnRingkasan) {
-    btnRingkasan.disabled = true;
-    btnRingkasan.textContent = '...';
-  }
+  const row = allData.find(r => r.row_id == rowId);
+  if (!row) { savingSet.delete(`d-${rowId}`); return; }
 
-  try {
-    await apiUpdate(rowId, { diambil: true });
+  // Optimistic update
+  row.diambil = true;
+  updateStats(allData);
+  applyFilters();
+  if (activeTab === 'ringkasan') renderRingkasan();
+  if (activeTab === 'riwayat') renderHistory();
+
+  apiUpdate(rowId, { diambil: true }).then(() => {
     showToast('🚚 Paket diambil kurir!', 'success');
-    if (card) card.classList.add('card-fade-out');
-    
-    // update data locally
-    const row = allData.find(r => r.row_id == rowId);
-    if (row) row.diambil = true;
-    
-    setTimeout(() => {
-      // we can remove it or just let it be updated in local data
-      allData = allData.filter(r => r.row_id != rowId);
-      updateStats(allData);
-      applyFilters();
-      if (activeTab === 'ringkasan') renderRingkasan();
-    }, 420);
-  } catch(e) {
-    if (chk) chk.classList.remove('checked');
-    if (btnRingkasan) {
-      btnRingkasan.disabled = false;
-      btnRingkasan.textContent = '🚚 Ambil';
-    }
+    savingSet.delete(`d-${rowId}`);
+  }).catch(e => {
+    row.diambil = false;
+    updateStats(allData);
+    applyFilters();
+    if (activeTab === 'ringkasan') renderRingkasan();
+    if (activeTab === 'riwayat') renderHistory();
     showToast('❌ Gagal menyimpan. Coba lagi.', 'error');
-  }
-
-  savingSet.delete(`d-${rowId}`);
+    savingSet.delete(`d-${rowId}`);
+  });
 }
 
 async function saveResi(rowId) {
