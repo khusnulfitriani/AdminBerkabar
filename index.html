@@ -11,17 +11,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --primary: #002045;
-    --primary-container: #1a365d;
-    --surface: #fbf9f8;
-    --surface-low: #f5f3f3;
+    --primary: #4f46e5;
+    --primary-container: #c7d2fe;
+    --surface: #ffffff;
+    --surface-low: #f8fafc;
     --surface-card: #ffffff;
-    --on-surface: #1b1c1c;
-    --on-surface-muted: #6b6e6e;
-    --outline-variant: rgba(27,28,28,0.15);
+    --on-surface: #0f172a;
+    --on-surface-muted: #64748b;
+    --outline-variant: #e2e8f0;
 
-    --status-waiting-bg: #e8e8e8;
-    --status-waiting-text: #4a4a4a;
+    --status-waiting-bg: #f1f5f9;
+    --status-waiting-text: #475569;
     --status-printed-bg: #dbeafe;
     --status-printed-text: #1e40af;
     --status-packing-bg: #fce7f3;
@@ -140,7 +140,7 @@
 
   /* ---- PRINT INFO BANNER ---- */
   .print-banner {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%);
+    background: var(--primary);
     border-radius: 16px;
     padding: 12px 16px;
     margin-bottom: 12px;
@@ -313,15 +313,14 @@
 
   .badge {
     border-radius: 20px;
-    padding: 5px 13px;
+    padding: 5px 12px;
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.03rem;
-    text-transform: uppercase;
+    letter-spacing: 0.02rem;
     white-space: nowrap;
   }
 
-  .badge-ekspedisi { background: #002045; color: white; }
+  .badge-ekspedisi { background: var(--on-surface); color: white; }
   .badge-waiting { background: var(--status-waiting-bg); color: var(--status-waiting-text); }
   .badge-printed { background: var(--status-printed-bg); color: var(--status-printed-text); }
   .badge-packing { background: var(--status-packing-bg); color: var(--status-packing-text); }
@@ -343,51 +342,12 @@
 
   .recipient-name span { font-weight: 600; color: var(--on-surface); }
 
-  .resi-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 14px;
-    align-items: center;
-  }
-
-  .resi-input {
-    flex: 1;
-    border: none;
-    border-bottom: 2px solid var(--outline-variant);
-    background: transparent;
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--on-surface);
-    padding: 6px 0;
-    outline: none;
-    transition: border-color 0.2s;
-    letter-spacing: 0.02em;
-    min-width: 0;
-  }
-  .resi-input:focus { border-color: var(--primary); }
-  .resi-input::placeholder { font-weight: 400; color: var(--on-surface-muted); font-size: 13px; }
-
-  .resi-save-btn {
-    background: linear-gradient(135deg, var(--primary), var(--primary-container));
-    color: white;
-    border: none;
-    border-radius: 12px;
-    padding: 8px 16px;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    white-space: nowrap;
-    letter-spacing: 0.03rem;
-    transition: opacity 0.2s, transform 0.15s;
-    flex-shrink: 0;
-  }
-  .resi-save-btn:active { opacity: 0.8; transform: scale(0.96); }
-
+  /* Removed inline resi styles */
+  
   .divider {
     height: 1px;
     background: var(--outline-variant);
-    margin: 0 -18px 14px;
+    margin: 14px -18px;
   }
 
   .checkbox-row { display: flex; flex-direction: column; gap: 12px; }
@@ -567,7 +527,7 @@
     padding: 16px;
     border: none;
     border-radius: 16px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-container));
+    background: var(--primary);
     color: white;
     font-family: 'Public Sans', sans-serif;
     font-size: 16px;
@@ -822,24 +782,39 @@
     display: flex; flex-direction: column; gap: 6px;
   }
   .ringkasan-item {
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; gap: 12px;
     background: var(--surface-card);
-    padding: 10px 14px;
-    border-radius: 12px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-    font-size: 14px; font-weight: 600;
+    padding: 12px 16px;
+    border-radius: 16px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.03), 0 4px 12px rgba(0,0,0,0.02);
+    font-size: 15px; font-weight: 700;
     color: var(--on-surface);
-    cursor: pointer;
+    margin-bottom: 10px;
   }
   .ringkasan-item .eksp {
     background: var(--surface-low);
     color: var(--primary);
-    font-size: 10px; font-weight: 800;
-    padding: 3px 6px; border-radius: 6px;
+    font-size: 11px; font-weight: 800;
+    padding: 4px 8px; border-radius: 8px;
     text-transform: uppercase;
   }
   .ringkasan-item .name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
+  
+  .action-btn {
+    border: none;
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .action-btn:active { transform: scale(0.95); opacity: 0.8; }
+  .btn-kemas { background: var(--primary); color: white; }
+  .btn-ambil { background: #16a34a; color: white; }
+  
 </style>
 </head>
 <body>
@@ -1330,15 +1305,6 @@ function buildCard(row) {
 
     ${row.catatan ? `<div style="font-size:12px;color:#9a5a00;background:#fef3c7;border-radius:8px;padding:6px 10px;margin-bottom:12px;">📝 ${row.catatan}</div>` : ''}
 
-    <div class="resi-row">
-      <input type="text" class="resi-input" placeholder="Masukkan Nomor Resi..."
-        value="${row.resi != null ? String(row.resi) : ''}"
-        id="resi-${row.row_id}"
-        onkeydown="if(event.key==='Enter')saveResi(${row.row_id})"
-        inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false"/>
-      <button class="resi-save-btn" onclick="saveResi(${row.row_id})">Simpan</button>
-    </div>
-
     <div class="divider"></div>
 
     <div class="checkbox-row">
@@ -1380,11 +1346,14 @@ async function togglePacking(rowId) {
   const lbl = document.getElementById(`lbl-packing-${rowId}`);
   const card = document.getElementById(`card-${rowId}`);
   const badge = document.getElementById(`badge-status-${rowId}`);
-  const chkRingkasan = document.getElementById(`chk-ringkasan-packing-${rowId}`);
+  const btnRingkasan = document.getElementById(`btn-ringkasan-packing-${rowId}`);
 
   if (chk) chk.classList.toggle('checked', newVal);
   if (lbl) lbl.classList.toggle('checked-label', newVal);
-  if (chkRingkasan) chkRingkasan.classList.toggle('checked', newVal);
+  if (btnRingkasan) {
+    btnRingkasan.disabled = true;
+    btnRingkasan.textContent = '...';
+  }
 
   if (card) {
     if (newVal) {
@@ -1411,7 +1380,10 @@ async function togglePacking(rowId) {
   } catch(e) {
     if (chk) chk.classList.toggle('checked', !newVal);
     if (lbl) lbl.classList.toggle('checked-label', !newVal);
-    if (chkRingkasan) chkRingkasan.classList.toggle('checked', !newVal);
+    if (btnRingkasan) {
+      btnRingkasan.disabled = false;
+      btnRingkasan.textContent = '📦 Kemas';
+    }
     showToast('❌ Gagal menyimpan. Coba lagi.', 'error');
   }
 
@@ -1424,10 +1396,13 @@ async function toggleDiambil(rowId) {
 
   const chk = document.getElementById(`chk-diambil-${rowId}`);
   const card = document.getElementById(`card-${rowId}`);
-  const chkRingkasan = document.getElementById(`chk-ringkasan-diambil-${rowId}`);
+  const btnRingkasan = document.getElementById(`btn-ringkasan-diambil-${rowId}`);
   
   if (chk) chk.classList.add('checked');
-  if (chkRingkasan) chkRingkasan.classList.add('checked');
+  if (btnRingkasan) {
+    btnRingkasan.disabled = true;
+    btnRingkasan.textContent = '...';
+  }
 
   try {
     await apiUpdate(rowId, { diambil: true });
@@ -1447,7 +1422,10 @@ async function toggleDiambil(rowId) {
     }, 420);
   } catch(e) {
     if (chk) chk.classList.remove('checked');
-    if (chkRingkasan) chkRingkasan.classList.remove('checked');
+    if (btnRingkasan) {
+      btnRingkasan.disabled = false;
+      btnRingkasan.textContent = '🚚 Ambil';
+    }
     showToast('❌ Gagal menyimpan. Coba lagi.', 'error');
   }
 
@@ -1584,7 +1562,7 @@ function renderRingkasan() {
           ${r.ekspedisi ? `<span class="eksp">${r.ekspedisi}</span>` : ''}
           <span class="name">${r.nama}</span>
         </div>
-        <div class="big-checkbox" onclick="togglePacking(${r.row_id}); event.stopPropagation();" style="transform: scale(0.85); width: 26px; height: 26px; flex-shrink: 0;" id="chk-ringkasan-packing-${r.row_id}"></div>
+        <button class="action-btn btn-kemas" onclick="togglePacking(${r.row_id}); event.stopPropagation();" id="btn-ringkasan-packing-${r.row_id}">📦 Kemas</button>
       </div>`;
     });
     html += `</div>`;
@@ -1602,7 +1580,7 @@ function renderRingkasan() {
           ${r.ekspedisi ? `<span class="eksp">${r.ekspedisi}</span>` : ''}
           <span class="name">${r.nama}</span>
         </div>
-        <div class="big-checkbox" onclick="toggleDiambil(${r.row_id}); event.stopPropagation();" style="transform: scale(0.85); width: 26px; height: 26px; flex-shrink: 0;" id="chk-ringkasan-diambil-${r.row_id}"></div>
+        <button class="action-btn btn-ambil" onclick="toggleDiambil(${r.row_id}); event.stopPropagation();" id="btn-ringkasan-diambil-${r.row_id}">🚚 Ambil</button>
       </div>`;
     });
     html += `</div>`;
