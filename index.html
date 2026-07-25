@@ -1543,7 +1543,7 @@ function renderRingkasan() {
   const q = (document.getElementById('ringkasan-search').value || '').toLowerCase().trim();
   const list = document.getElementById('ringkasan-list');
   
-  const valid = allData.filter(r => hasNama(r) && !isTruthy(r.diambil));
+  const valid = allData.filter(r => hasNama(r) && !isTruthy(r.diambil) && r.tanggal_print);
   
   const filtered = valid.filter(r => {
     if (!q) return true;
