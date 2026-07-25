@@ -931,19 +931,21 @@
         <div class="label">Ada Resi</div>
       </div>
       <div class="stat-chip">
-        <div class="num" id="hstat-today">—</div>
-        <div class="label">Hari Ini</div>
+        <div class="num" id="hstat-noresi">—</div>
+        <div class="label">Belum Resi</div>
       </div>
     </div>
     <div class="filter-row" style="margin-bottom:8px">
       <div class="filter-pill">
-        <span class="filter-pill-icon">📅</span>
-        <select class="filter-select" id="history-filter-tanggal" onchange="renderHistory()">
-          <option value="">Tanggal Print</option>
+        <span class="filter-pill-icon">🔽</span>
+        <select class="filter-select" id="history-filter-status" onchange="renderHistory()">
+          <option value="">Semua Resi</option>
+          <option value="ada">Sudah Ada Resi</option>
+          <option value="belum">Belum Ada Resi</option>
         </select>
       </div>
       <div class="filter-pill">
-        <span class="filter-pill-icon">🚚</span>
+        <span class="filter-pill-icon">🔽</span>
         <select class="filter-select" id="history-filter-ekspedisi" onchange="renderHistory()">
           <option value="">Ekspedisi</option>
         </select>
@@ -1573,7 +1575,7 @@ function isTruthy(val) {
 
 function renderHistory() {
   const q = (document.getElementById('history-search').value || '').toLowerCase().trim();
-  const tgl = document.getElementById('history-filter-tanggal').value;
+  const statusResi = document.getElementById('history-filter-status').value;
   const eksp = document.getElementById('history-filter-ekspedisi').value;
 
   const shipped = allData.filter(r => {
@@ -1584,21 +1586,18 @@ function renderHistory() {
       if (!searchable.includes(q)) return false;
     }
     if (eksp && r.ekspedisi !== eksp) return false;
-    if (tgl) {
-      const rowTgl = r.tanggal_print ? r.tanggal_print.substring(0, 10) : '';
-      if (rowTgl !== tgl) return false;
-    }
+    
+    const adaResi = r.resi && String(r.resi).trim() !== '';
+    if (statusResi === 'ada' && !adaResi) return false;
+    if (statusResi === 'belum' && adaResi) return false;
+    
     return true;
   });
 
   // Stats
-  const today = new Date().toDateString();
   document.getElementById('hstat-total').textContent = shipped.length;
   document.getElementById('hstat-resi').textContent = shipped.filter(r => r.resi && String(r.resi).trim()).length;
-  document.getElementById('hstat-today').textContent = shipped.filter(r => {
-    if (!r.tanggal_print) return false;
-    return new Date(r.tanggal_print).toDateString() === today;
-  }).length;
+  document.getElementById('hstat-noresi').textContent = shipped.filter(r => !(r.resi && String(r.resi).trim())).length;
 
   const list = document.getElementById('history-list');
 
@@ -1669,19 +1668,9 @@ function renderHistory() {
 
 function populateHistoryFilters(data) {
   const shipped = data.filter(r => isTruthy(r.diambil) && r.nama && r.nama.toString().trim());
-  const tglSet = new Set();
   const ekspSet = new Set();
   shipped.forEach(r => {
-    if (r.tanggal_print) tglSet.add(r.tanggal_print.substring(0, 10));
     if (r.ekspedisi) ekspSet.add(r.ekspedisi);
-  });
-
-  const tglEl = document.getElementById('history-filter-tanggal');
-  tglEl.innerHTML = '<option value="">Semua Tanggal</option>';
-  [...tglSet].sort().reverse().forEach(t => {
-    const o = document.createElement('option');
-    o.value = t; o.textContent = formatTgl(t + 'T00:00:00');
-    tglEl.appendChild(o);
   });
 
   const ekspEl = document.getElementById('history-filter-ekspedisi');
