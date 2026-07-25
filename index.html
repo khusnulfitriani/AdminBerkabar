@@ -849,7 +849,7 @@
     <input type="text" class="search-input" id="ringkasan-search" placeholder="Cari nama atau ekspedisi..." oninput="renderRingkasan()">
   </div>
 
-  <div id="ringkasan-list"></div>
+  <div class="ringkasan-list" id="ringkasan-list"></div>
 </div>
 
 <!-- PAGE: ANTRIAN -->
@@ -870,38 +870,28 @@
 
     <div class="stats-row" style="margin-top:10px">
       <div class="stat-chip">
-        <div class="num" id="stat-total">—</div>
-        <div class="label">Antrian</div>
-      </div>
-      <div class="stat-chip">
         <div class="num" id="stat-belum-packing">—</div>
         <div class="label">Belum Packing</div>
       </div>
       <div class="stat-chip">
-        <div class="num" id="stat-siap-kurir">—</div>
-        <div class="label">Siap Kurir</div>
+        <div class="num" id="stat-print-hari-ini">—</div>
+        <div class="label">Print Hari Ini</div>
       </div>
       <div class="stat-chip">
-        <div class="num" id="stat-shipped">—</div>
-        <div class="label">Diambil</div>
+        <div class="num" id="stat-packing-hari-ini">—</div>
+        <div class="label">Packing Hari Ini</div>
       </div>
     </div>
 
     <div class="filter-row" style="margin-bottom:8px">
       <div class="filter-pill">
-        <span class="filter-pill-icon">📅</span>
-        <select class="filter-select" id="filter-tanggal" onchange="applyFilters()">
-          <option value="">Tanggal Print</option>
-        </select>
-      </div>
-      <div class="filter-pill">
-        <span class="filter-pill-icon">🚚</span>
+        <span class="filter-pill-icon">🔽</span>
         <select class="filter-select" id="filter-ekspedisi" onchange="applyFilters()">
           <option value="">Ekspedisi</option>
         </select>
       </div>
       <div class="filter-pill">
-        <span class="filter-pill-icon">🏷️</span>
+        <span class="filter-pill-icon">🔽</span>
         <select class="filter-select" id="filter-status" onchange="applyFilters()">
           <option value="">Status</option>
           <option value="waiting">⏳ Menunggu</option>
@@ -1119,7 +1109,7 @@ function formatTgl(str) {
 }
 
 function updateFilterActiveState() {
-  ['filter-tanggal','filter-ekspedisi','filter-status'].forEach(id => {
+  ['filter-ekspedisi','filter-status'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.toggle('active', el.value !== '');
   });
@@ -1127,7 +1117,6 @@ function updateFilterActiveState() {
 
 function applyFilters() {
   updateFilterActiveState();
-  const tgl = document.getElementById('filter-tanggal').value;
   const eksp = document.getElementById('filter-ekspedisi').value;
   const st = document.getElementById('filter-status').value;
   const q = (document.getElementById('search-nama').value || '').toLowerCase().trim();
@@ -1136,10 +1125,6 @@ function applyFilters() {
     if (isTruthy(row.diambil)) return false;
     if (!row.nama || !row.nama.toString().trim()) return false;
     const status = getStatus(row);
-    if (tgl) {
-      const rowTgl = row.tanggal_print ? row.tanggal_print.substring(0, 10) : '';
-      if (rowTgl !== tgl) return false;
-    }
     if (eksp && row.ekspedisi !== eksp) return false;
     if (st && status !== st) return false;
     if (q) {
@@ -1165,27 +1150,15 @@ function clearSearch() {
 }
 
 function populateFilters(data) {
-  const tglSet = new Set();
   const ekspSet = new Set();
 
   data.forEach(r => {
-    if (r.tanggal_print) tglSet.add(r.tanggal_print.substring(0, 10));
     if (r.ekspedisi) ekspSet.add(r.ekspedisi);
-  });
-
-  const tglEl = document.getElementById('filter-tanggal');
-  const curTgl = tglEl.value;
-  tglEl.innerHTML = '<option value="">Semua Tanggal</option>';
-  [...tglSet].sort().reverse().forEach(t => {
-    const o = document.createElement('option');
-    o.value = t; o.textContent = formatTgl(t);
-    if (t === curTgl) o.selected = true;
-    tglEl.appendChild(o);
   });
 
   const ekspEl = document.getElementById('filter-ekspedisi');
   const curEksp = ekspEl.value;
-  ekspEl.innerHTML = '<option value="">Semua Ekspedisi</option>';
+  ekspEl.innerHTML = '<option value="">Ekspedisi</option>';
   [...ekspSet].sort().forEach(e => {
     const o = document.createElement('option');
     o.value = e; o.textContent = e;
@@ -1199,13 +1172,21 @@ function hasNama(r) { return r.nama && r.nama.toString().trim(); }
 function updateStats(data) {
   const valid = data.filter(r => hasNama(r));
   const active = valid.filter(r => !isTruthy(r.diambil));
-  document.getElementById('stat-total').textContent = active.length;
+  
+  // Hitung jumlah
+  const belumPacking = active.filter(r => !r.packing).length;
+  
+  const todayLabel = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+  const printHariIni = valid.filter(r => r.tanggal_print && formatTgl(r.tanggal_print) === todayLabel).length;
+  const packingHariIni = active.filter(r => r.packing).length; // Semua yang ada di antrian yang sudah dipacking
+
+  document.getElementById('stat-belum-packing').textContent = belumPacking;
+  document.getElementById('stat-print-hari-ini').textContent = printHariIni;
+  document.getElementById('stat-packing-hari-ini').textContent = packingHariIni;
+
   const badge = document.getElementById('nav-badge');
   if (active.length > 0) { badge.style.display = 'block'; badge.textContent = active.length; }
   else { badge.style.display = 'none'; }
-  document.getElementById('stat-belum-packing').textContent = active.filter(r => !r.packing).length;
-  document.getElementById('stat-siap-kurir').textContent = active.filter(r => r.packing).length;
-  document.getElementById('stat-shipped').textContent = valid.filter(r => isTruthy(r.diambil)).length;
 
   // Print banner
   const printed = active.filter(r => r.tanggal_print);
