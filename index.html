@@ -874,12 +874,8 @@
         <div class="label">Belum Packing</div>
       </div>
       <div class="stat-chip">
-        <div class="num" id="stat-print-hari-ini">—</div>
-        <div class="label">Print Hari Ini</div>
-      </div>
-      <div class="stat-chip">
-        <div class="num" id="stat-packing-hari-ini">—</div>
-        <div class="label">Packing Hari Ini</div>
+        <div class="num" id="stat-siap-pickup">—</div>
+        <div class="label">Siap Pickup</div>
       </div>
     </div>
 
@@ -1174,15 +1170,11 @@ function updateStats(data) {
   const active = valid.filter(r => !isTruthy(r.diambil));
   
   // Hitung jumlah
-  const belumPacking = active.filter(r => !r.packing).length;
-  
-  const todayLabel = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-  const printHariIni = valid.filter(r => r.tanggal_print && formatTgl(r.tanggal_print) === todayLabel).length;
-  const packingHariIni = active.filter(r => r.packing).length; // Semua yang ada di antrian yang sudah dipacking
+  const belumPacking = active.filter(r => r.tanggal_print && !r.packing).length;
+  const siapPickup = active.filter(r => r.packing).length;
 
   document.getElementById('stat-belum-packing').textContent = belumPacking;
-  document.getElementById('stat-print-hari-ini').textContent = printHariIni;
-  document.getElementById('stat-packing-hari-ini').textContent = packingHariIni;
+  document.getElementById('stat-siap-pickup').textContent = siapPickup;
 
   const badge = document.getElementById('nav-badge');
   if (active.length > 0) { badge.style.display = 'block'; badge.textContent = active.length; }
@@ -1736,7 +1728,7 @@ async function saveHistoryResi(rowId) {
 }
 
 loadData();
-setInterval(loadData, 60000); // auto refresh setiap 1 menit
+// setInterval(loadData, 60000); // auto refresh dimatikan agar tidak mengganggu admin yang sedang mengetik
 </script>
 </body>
 </html>
