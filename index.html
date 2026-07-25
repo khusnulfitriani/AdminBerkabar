@@ -1380,21 +1380,25 @@ async function togglePacking(rowId) {
   const lbl = document.getElementById(`lbl-packing-${rowId}`);
   const card = document.getElementById(`card-${rowId}`);
   const badge = document.getElementById(`badge-status-${rowId}`);
+  const chkRingkasan = document.getElementById(`chk-ringkasan-packing-${rowId}`);
 
-  chk.classList.toggle('checked', newVal);
-  lbl.classList.toggle('checked-label', newVal);
+  if (chk) chk.classList.toggle('checked', newVal);
+  if (lbl) lbl.classList.toggle('checked-label', newVal);
+  if (chkRingkasan) chkRingkasan.classList.toggle('checked', newVal);
 
-  if (newVal) {
-    card.classList.add('packing-done', 'status-packing');
-    card.classList.remove('status-waiting', 'status-printed');
-    if (badge) { badge.className = 'badge badge-packing'; badge.textContent = 'Sedang Packing'; }
-  } else {
-    card.classList.remove('packing-done', 'status-packing');
-    card.classList.add(row.tanggal_print ? 'status-printed' : 'status-waiting');
-    if (badge) {
-      const st = row.tanggal_print ? 'printed' : 'waiting';
-      badge.className = `badge badge-${st}`;
-      badge.textContent = statusLabel(st);
+  if (card) {
+    if (newVal) {
+      card.classList.add('packing-done', 'status-packing');
+      card.classList.remove('status-waiting', 'status-printed');
+      if (badge) { badge.className = 'badge badge-packing'; badge.textContent = 'Sedang Packing'; }
+    } else {
+      card.classList.remove('packing-done', 'status-packing');
+      card.classList.add(row.tanggal_print ? 'status-printed' : 'status-waiting');
+      if (badge) {
+        const st = row.tanggal_print ? 'printed' : 'waiting';
+        badge.className = `badge badge-${st}`;
+        badge.textContent = statusLabel(st);
+      }
     }
   }
 
@@ -1402,10 +1406,12 @@ async function togglePacking(rowId) {
     await apiUpdate(rowId, { packing: newVal });
     row.packing = newVal;
     updateStats(allData);
+    if (activeTab === 'ringkasan') renderRingkasan();
     showToast(newVal ? '✅ Packing selesai ditandai!' : '↩️ Packing dibatalkan', 'success');
   } catch(e) {
-    chk.classList.toggle('checked', !newVal);
-    lbl.classList.toggle('checked-label', !newVal);
+    if (chk) chk.classList.toggle('checked', !newVal);
+    if (lbl) lbl.classList.toggle('checked-label', !newVal);
+    if (chkRingkasan) chkRingkasan.classList.toggle('checked', !newVal);
     showToast('❌ Gagal menyimpan. Coba lagi.', 'error');
   }
 
@@ -1418,19 +1424,30 @@ async function toggleDiambil(rowId) {
 
   const chk = document.getElementById(`chk-diambil-${rowId}`);
   const card = document.getElementById(`card-${rowId}`);
-  chk.classList.add('checked');
+  const chkRingkasan = document.getElementById(`chk-ringkasan-diambil-${rowId}`);
+  
+  if (chk) chk.classList.add('checked');
+  if (chkRingkasan) chkRingkasan.classList.add('checked');
 
   try {
     await apiUpdate(rowId, { diambil: true });
     showToast('🚚 Paket diambil kurir!', 'success');
-    card.classList.add('card-fade-out');
+    if (card) card.classList.add('card-fade-out');
+    
+    // update data locally
+    const row = allData.find(r => r.row_id == rowId);
+    if (row) row.diambil = true;
+    
     setTimeout(() => {
+      // we can remove it or just let it be updated in local data
       allData = allData.filter(r => r.row_id != rowId);
       updateStats(allData);
       applyFilters();
+      if (activeTab === 'ringkasan') renderRingkasan();
     }, 420);
   } catch(e) {
-    chk.classList.remove('checked');
+    if (chk) chk.classList.remove('checked');
+    if (chkRingkasan) chkRingkasan.classList.remove('checked');
     showToast('❌ Gagal menyimpan. Coba lagi.', 'error');
   }
 
@@ -1504,6 +1521,9 @@ function saveSettings() {
 
 // ==================== INIT ====================
 
+const savedUrl = localStorage.getItem(STORAGE_KEY);
+if (savedUrl) APPS_SCRIPT_URL = savedUrl;
+
 // ==================== TAB NAVIGATION ====================
 
 let activeTab = 'antrian';
@@ -1559,9 +1579,12 @@ function renderRingkasan() {
     </div>
     <div class="ringkasan-items">`;
     belumPacking.forEach(r => {
-      html += `<div class="ringkasan-item" onclick="switchTab('antrian')">
-        ${r.ekspedisi ? `<span class="eksp">${r.ekspedisi}</span>` : ''}
-        <span class="name">${r.nama}</span>
+      html += `<div class="ringkasan-item" style="padding-right: 10px;">
+        <div style="flex: 1; display: flex; align-items: center; gap: 8px;" onclick="switchTab('antrian')">
+          ${r.ekspedisi ? `<span class="eksp">${r.ekspedisi}</span>` : ''}
+          <span class="name">${r.nama}</span>
+        </div>
+        <div class="big-checkbox" onclick="togglePacking(${r.row_id}); event.stopPropagation();" style="transform: scale(0.85); width: 26px; height: 26px; flex-shrink: 0;" id="chk-ringkasan-packing-${r.row_id}"></div>
       </div>`;
     });
     html += `</div>`;
@@ -1574,9 +1597,12 @@ function renderRingkasan() {
     </div>
     <div class="ringkasan-items">`;
     siapAmbil.forEach(r => {
-      html += `<div class="ringkasan-item" style="border-left:3px solid #16a34a" onclick="switchTab('antrian')">
-        ${r.ekspedisi ? `<span class="eksp">${r.ekspedisi}</span>` : ''}
-        <span class="name">${r.nama}</span>
+      html += `<div class="ringkasan-item" style="border-left:3px solid #16a34a; padding-right: 10px;">
+        <div style="flex: 1; display: flex; align-items: center; gap: 8px;" onclick="switchTab('antrian')">
+          ${r.ekspedisi ? `<span class="eksp">${r.ekspedisi}</span>` : ''}
+          <span class="name">${r.nama}</span>
+        </div>
+        <div class="big-checkbox" onclick="toggleDiambil(${r.row_id}); event.stopPropagation();" style="transform: scale(0.85); width: 26px; height: 26px; flex-shrink: 0;" id="chk-ringkasan-diambil-${r.row_id}"></div>
       </div>`;
     });
     html += `</div>`;
